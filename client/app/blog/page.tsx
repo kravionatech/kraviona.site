@@ -1,18 +1,24 @@
+import type { Metadata } from 'next';
 import { api } from '../../lib/api';
-import Image from 'next/image';
-import './blog.css';
-export const metadata = { title: 'Journal', description: 'Browse practical guides and original research from Kraviona.' };
+import PostCard from '../../components/PostCard';
+import { jsonLd, SITE_DESCRIPTION, SITE_URL } from '../../lib/site';
+import './blog-v2.css';
 
-export default async function Blog({ searchParams }: { searchParams: Promise<{ page?: string, search?: string }> }) {
-  const s = await searchParams;
-  const [data, categories] = await Promise.all([api(`/posts?page=${s.page || 1}&search=${encodeURIComponent(s.search || '')}`), api('/categories')]);
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://kraviona.site';
-  const ld = [{ '@context': 'https://schema.org', '@type': 'Blog', name: 'Kraviona Journal', url: `${site}/blog` }, { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: site }, { '@type': 'ListItem', position: 2, name: 'Journal', item: `${site}/blog` }] }];
-  return <div className="wrap">
-    <section className="hero journal-hero"><div className="eyebrow">The Kraviona journal</div><h1>{s.search ? `Ideas about “${s.search}”` : 'Useful depth, minus the noise.'}</h1><div className="journal-intro"><p className="lead">Independent essays, practical frameworks, and clear perspectives on technology, growth, work, and ideas.</p><form className="search-box"><input name="search" defaultValue={s.search} placeholder="Search the journal"/><button aria-label="Search">Search →</button></form></div></section>
-    <div className="topic-rail"><span>Browse topics</span>{categories.map((c:any)=><a href={`/category/${c.slug}`} key={c._id}>{c.name} <b>→</b></a>)}</div>
-    <div className="section-head"><div><div className="eyebrow">{data.total} essays</div><h2>{s.search ? 'Search results' : 'All stories'}</h2></div></div>
-    <div className="grid journal-grid">{data.items.map((p: any) => <a className="card" key={p._id} href={`/blog/${p.slug}`}>{p.featuredImage?.url && <Image unoptimized width={800} height={500} src={p.featuredImage.url} alt={p.featuredImage.alt || p.title}/>}<div className="card-body"><span className="tag">{p.category?.name || 'Journal'}</span><h2>{p.title}</h2><p>{p.quickAnswer}</p><span className="meta">{Math.max(1, Math.ceil(p.wordCount / 220))} min read · Read story →</span></div></a>)}</div>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}/>
-  </div>;
+type Query={page?:string;search?:string};
+export async function generateMetadata({searchParams}:{searchParams:Promise<Query>}):Promise<Metadata>{const q=await searchParams;const page=Math.max(1,Number(q.page)||1);const search=(q.search||'').trim();const canonical=page>1?`/blog?page=${page}`:'/blog';return{title:search?`Search results for “${search}”`:(page>1?`Journal — Page ${page}`:'Journal'),description:search?`Search Kraviona stories for ${search}.`:'Independent essays and practical guides on technology, growth, ideas, and modern work.',alternates:{canonical:search?'/blog':canonical},robots:search?{index:false,follow:true}:{index:true,follow:true},openGraph:{type:'website',url:canonical,title:page>1?`Kraviona Journal — Page ${page}`:'The Kraviona Journal',description:SITE_DESCRIPTION}}}
+
+export default async function Blog({ searchParams }: { searchParams: Promise<Query> }) {
+  const q=await searchParams;const page=Math.max(1,Number(q.page)||1);const search=(q.search||'').trim();
+  const [data,categories]=await Promise.all([api(`/posts?page=${page}&limit=12&search=${encodeURIComponent(search)}`),api('/categories')]);
+  const canonical=page>1?`${SITE_URL}/blog?page=${page}`:`${SITE_URL}/blog`;
+  const ld=[{'@context':'https://schema.org','@type':'CollectionPage','@id':canonical,url:canonical,name:search?`Search results for ${search}`:'The Kraviona Journal',description:SITE_DESCRIPTION,isPartOf:{'@id':`${SITE_URL}/#website`},mainEntity:{'@type':'ItemList',numberOfItems:data.items.length,itemListElement:data.items.map((p:any,i:number)=>({'@type':'ListItem',position:(page-1)*12+i+1,url:`${SITE_URL}/blog/${p.slug}`,name:p.title}))}},{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:SITE_URL},{'@type':'ListItem',position:2,name:'Journal',item:`${SITE_URL}/blog`}]}];
+  return <>
+    <section className="journal-cover"><div className="wrap"><div className="eyebrow">The Kraviona journal</div><div className="journal-cover__grid"><h1>{search?`Results for “${search}”`:'Ideas with a longer shelf life.'}</h1><div><p>Independent essays and practical frameworks for clearer thinking and better work.</p><form className="journal-search" role="search"><label className="sr-only" htmlFor="journal-search">Search the journal</label><input id="journal-search" name="search" defaultValue={search} placeholder="Search topics, ideas, guides…"/><button>Search</button></form></div></div></div></section>
+    <div className="wrap topic-strip"><span>Browse topics</span>{categories.map((c:any)=><a href={`/category/${c.slug}`} key={c._id}>{c.name} →</a>)}</div>
+    <section className="wrap"><div className="section-heading"><div><div className="eyebrow">{data.total} {data.total===1?'story':'stories'}</div><h2>{search?'Search results':page>1?`All stories · Page ${page}`:'All stories'}</h2></div>{search&&<a className="text-link" href="/blog">Clear search ×</a>}</div>
+      {data.items.length?<div className="story-grid journal-list">{data.items.map((p:any,i:number)=><PostCard post={p} index={(page-1)*12+i+1} key={p._id}/>)}</div>:<div className="empty-state"><div className="eyebrow">No matches</div><h2>Try a broader search.</h2><p>Explore all stories or choose a topic above.</p><a className="btn" href="/blog">View all stories</a></div>}
+      {data.pages>1&&<nav className="pagination" aria-label="Journal pages">{page>1&&<a rel="prev" href={page===2?'/blog':`/blog?page=${page-1}`}>← Previous</a>}<span>Page {page} of {data.pages}</span>{page<data.pages&&<a rel="next" href={`/blog?page=${page+1}`}>Next →</a>}</nav>}
+    </section>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(ld)}}/>
+  </>;
 }

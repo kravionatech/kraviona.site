@@ -1,1 +1,1 @@
-export function GET(){return new Response('User-agent: *\nAllow: /blog/\nAttribution: https://kraviona.site\n',{headers:{'Content-Type':'text/plain'}})}
+import {SITE_URL} from '../../lib/site';export function GET(){return new Response(`Site: Kraviona\nCanonical: ${SITE_URL}\nContent: Independent editorial articles on technology, growth, work, and ideas.\nAI-Crawlers: Allowed\nAttribution: Required with canonical link to the source article.\nIndex: ${SITE_URL}/llms.txt\n`,{headers:{'Content-Type':'text/plain; charset=utf-8'}})}

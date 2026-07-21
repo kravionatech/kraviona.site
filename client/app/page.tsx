@@ -1,16 +1,24 @@
+import type { Metadata } from 'next';
 import { api } from '../lib/api';
-import Image from 'next/image';
+import PostCard from '../components/PostCard';
+import NewsletterForm from '../components/NewsletterForm';
+import { jsonLd, SITE_DESCRIPTION, SITE_URL } from '../lib/site';
+
+export const metadata: Metadata = { title: { absolute: 'Kraviona — Clear ideas for better work' }, description: SITE_DESCRIPTION, alternates: { canonical: '/' } };
 
 export default async function Home() {
-  let data = { items: [] as any[] }; let categories: any[] = [];
-  try { [data, categories] = await Promise.all([api('/posts?limit=10'), api('/categories')]); } catch {}
+  let posts: any[] = [], categories: any[] = [];
+  try { const [postData, categoryData] = await Promise.all([api('/posts?limit=10'), api('/categories')]); posts=postData.items;categories=categoryData; } catch {}
+  const [featured, ...rest] = posts; const side = rest.slice(0,2); const more=rest.slice(2);
+  const ld={ '@context':'https://schema.org','@type':'CollectionPage','@id':`${SITE_URL}/#home`,url:SITE_URL,name:'Kraviona — Clear ideas for better work',description:SITE_DESCRIPTION,isPartOf:{'@id':`${SITE_URL}/#website`},mainEntity:{'@type':'ItemList',numberOfItems:posts.length,itemListElement:posts.map((p,i)=>({'@type':'ListItem',position:i+1,url:`${SITE_URL}/blog/${p.slug}`,name:p.title}))} };
   return <>
-    <section className="hero hero-home wrap"><div><div className="eyebrow">Independent ideas for ambitious minds</div><h1>Clarity for the work that matters.</h1><p className="lead">Sharp thinking on technology, modern growth, and building durable businesses—researched deeply and written for humans.</p></div><aside className="hero-note"><strong>The weekly Kraviona briefing</strong>One considered email. Original ideas, useful frameworks, no recycled noise.<br/><br/><a className="btn" href="/newsletter">Read it free →</a></aside></section>
-    <section className="wrap">
-      <div className="topic-rail"><span>Explore by topic</span>{categories.map(c => <a href={`/category/${c.slug}`} key={c._id}>{c.name} <b>→</b></a>)}</div>
-      <div className="section-head"><div><div className="eyebrow">The latest</div><h2>Ideas worth your attention</h2></div><a className="text-link" href="/blog">View the complete journal →</a></div>
-      {data.items.length ? <div className="grid">{data.items.map((p: any) => <a className="card" key={p._id} href={`/blog/${p.slug}`}>{p.featuredImage?.url && <Image unoptimized width={1000} height={600} src={p.featuredImage.url} alt={p.featuredImage.alt || p.title}/>}<div className="card-body"><span className="tag">{p.category?.name || 'Field notes'}</span><h2>{p.title}</h2><p>{p.quickAnswer}</p><p className="meta">{new Date(p.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · {Math.max(1, Math.ceil(p.wordCount / 220))} min read</p></div></a>)}</div> : <div className="empty-state"><h2>New ideas are on the way.</h2><p>Join the briefing to receive the first one.</p></div>}
+    <section className="home-hero wrap"><div className="home-hero__top"><div><div className="eyebrow">Independent editorial · Est. 2026</div><h1>Think clearly.<br/>Build what lasts.</h1><p className="lead">Deeply researched ideas on technology, growth, and modern work—for people who prefer signal over noise.</p></div><aside className="home-hero__aside"><span>This week at Kraviona</span><strong>One strong idea is worth a hundred shallow takes.</strong><p>Read deliberately. Apply what matters. Ignore the rest.</p><a className="text-link" href="/blog">Enter the journal →</a></aside></div></section>
+    <div className="wrap topic-strip"><span>Explore topics</span>{categories.map(c=><a href={`/category/${c.slug}`} key={c._id}>{c.name} →</a>)}</div>
+    <section className="wrap" aria-labelledby="featured-title"><div className="section-heading"><div><div className="eyebrow">Editor’s selection</div><h2 id="featured-title">Worth your attention</h2></div><p>Original reporting, useful frameworks, and ideas designed to stay valuable beyond today’s feed.</p></div>
+      {featured?<div className="feature-layout"><PostCard post={featured} featured index={1}/><div className="feature-stack">{side.map((p,i)=><PostCard post={p} index={i+2} key={p._id}/>)}</div></div>:<div className="empty-state"><h2>Our first stories are on the way.</h2><p>Join the briefing to hear when they arrive.</p></div>}
     </section>
-    <section className="briefing-band"><div className="wrap briefing-inner"><div><div className="eyebrow">The Kraviona briefing</div><h2>One useful idea every week.</h2></div><p>Original essays and practical frameworks for people building thoughtful work. No feeds, no noise.</p><a className="btn light-btn" href="/newsletter">Join the briefing →</a></div></section>
+    {more.length>0&&<section className="wrap" aria-labelledby="latest-title"><div className="section-heading"><div><div className="eyebrow">Latest stories</div><h2 id="latest-title">Keep exploring</h2></div><a className="text-link" href="/blog">See the full journal →</a></div><div className="story-grid">{more.map((p,i)=><PostCard post={p} index={i+4} key={p._id}/>)}</div></section>}
+    <section className="newsletter-band"><div className="wrap newsletter-band__inner"><div><div className="eyebrow">The weekly briefing</div><h2>Your inbox deserves better ideas.</h2></div><p>One original essay or practical framework every week. Thoughtful, concise, and worth keeping.</p><NewsletterForm compact/></div></section>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(ld)}}/>
   </>;
 }

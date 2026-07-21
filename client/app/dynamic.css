@@ -1,3 +1,0 @@
-.topic-rail{grid-template-columns:1.2fr repeat(auto-fit,minmax(140px,1fr))}
-@media(max-width:1100px){.nav nav{max-width:650px;overflow-x:auto;scrollbar-width:none}.nav nav::-webkit-scrollbar{display:none}.nav nav a{white-space:nowrap}}
-@media(max-width:800px){.topic-rail{grid-template-columns:1fr 1fr}}

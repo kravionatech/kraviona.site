@@ -1,4 +1,5 @@
 import './globals.css';
+import './compat.css';
 import type { Metadata, Viewport } from 'next';
 import { api } from '../lib/api';
 import { absoluteUrl, jsonLd, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '../lib/site';
