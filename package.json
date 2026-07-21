@@ -1,0 +1,1 @@
+{"name":"kraviona-site","private":true,"workspaces":["backend","client","admin"],"scripts":{"dev":"concurrently -n api,client,admin -c blue,green,magenta \"npm run dev -w backend\" \"npm run dev -w client\" \"npm run dev -w admin\"","build":"npm run build -w client && npm run build -w admin","test":"npm test -w backend"},"devDependencies":{"concurrently":"^9.1.2"}}
