@@ -16,4 +16,10 @@ The public site runs on port 3000, admin on 3001, and API on 4000. Register the 
 Deploy `client` and `admin` as separate Vercel projects. Deploy `backend` to Railway with its environment variables. Set production `CLIENT_URL`, `ADMIN_URL`, and the two public API URL variables. The in-process cron uses Asia/Kolkata and defaults to `0 6 * * *`.
 
 Automated posts publish unless `AUTO_PUBLISH=false`; manual AI generations always remain drafts. All comments enter moderation. Newsletter signups use double opt-in.
+
+## Editorial Studio
+
+Open `http://localhost:3001` and sign in with an administrator account. The Studio supports full story editing (semantic rich text, images, alt text, takeaways, FAQs, tags, author identity, SEO and social previews), category SEO, AI drafts and queue management, comment moderation, subscriber management, user roles, and global website settings.
+
+Site settings control the public brand name, tagline, homepage hero, newsletter copy, default metadata, social image, and social profiles. Public pages read these settings dynamically. Configure `CLOUDINARY_URL` to enable direct image uploads; editors can always paste a hosted image URL as a fallback.
 # kraviona.site

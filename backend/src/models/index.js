@@ -24,7 +24,16 @@ const UserSchema = new Schema({ name: String, email: { type: String, unique: tru
 const CommentSchema = new Schema({ post: { type: Schema.Types.ObjectId, ref: 'Post', required: true }, user: { type: Schema.Types.ObjectId, ref: 'User', required: true }, parentComment: { type: Schema.Types.ObjectId, ref: 'Comment', default: null }, content: { type: String, required: true, maxlength: 2000 }, status: { type: String, enum: ['pending', 'approved', 'spam'], default: 'pending' } }, { timestamps: true });
 const SubscriberSchema = new Schema({ email: { type: String, unique: true, lowercase: true }, status: { type: String, enum: ['pending', 'subscribed', 'unsubscribed'], default: 'pending' }, resendContactId: String, confirmToken: String, subscribedAt: Date }, { timestamps: true });
 const KeywordQueueSchema = new Schema({ keyword: { type: String, required: true }, targetCategory: { type: Schema.Types.ObjectId, ref: 'Category' }, priority: { type: Number, default: 0 }, status: { type: String, enum: ['pending', 'used'], default: 'pending' } }, { timestamps: true });
+const SiteSettingsSchema = new Schema({
+  key: { type: String, unique: true, default: 'primary' },
+  brandName: { type: String, default: 'Kraviona' }, tagline: { type: String, default: 'Independent ideas for ambitious minds' },
+  heroEyebrow: { type: String, default: 'Independent editorial' }, heroTitle: { type: String, default: 'Think clearly. Build what lasts.' },
+  heroDescription: { type: String, default: 'Deeply researched ideas on technology, growth, and modern work—for people who prefer signal over noise.' },
+  briefingTitle: { type: String, default: 'Your inbox deserves better ideas.' }, briefingDescription: { type: String, default: 'One original essay or practical framework every week.' },
+  defaultSeo: { title: String, description: String, ogImage: String }, socialLinks: [{ label: String, url: String }]
+}, { timestamps: true });
 
 export const Post = model('Post', PostSchema); export const Category = model('Category', CategorySchema);
 export const User = model('User', UserSchema); export const Comment = model('Comment', CommentSchema);
 export const Subscriber = model('Subscriber', SubscriberSchema); export const KeywordQueue = model('KeywordQueue', KeywordQueueSchema);
+export const SiteSettings = model('SiteSettings', SiteSettingsSchema);
