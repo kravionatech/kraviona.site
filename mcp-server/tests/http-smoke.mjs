@@ -8,7 +8,7 @@ const token = 'local-http-smoke-token-32-characters';
 const cwd = new URL('..', import.meta.url).pathname;
 const child = spawn(process.execPath, ['src/http.js'], {
   cwd,
-  env: { ...process.env, PORT: String(port), MCP_BEARER_TOKEN: token },
+  env: { ...process.env, PORT: String(port), MCP_BEARER_TOKEN: token, MCP_PUBLIC_URL: `http://127.0.0.1:${port}` },
   stdio: ['ignore', 'pipe', 'pipe']
 });
 

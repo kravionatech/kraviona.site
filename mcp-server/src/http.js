@@ -72,6 +72,7 @@ app.post('/mcp', requireMcpAuth, async (req, res) => {
       const server = createMcpServer();
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
+        enableJsonResponse: true,
         onsessioninitialized: id => sessions.set(id, { server, transport })
       });
 
@@ -111,7 +112,9 @@ async function handleSessionRequest(req, res) {
   await session.transport.handleRequest(req, res);
 }
 
-app.get('/mcp', requireMcpAuth, handleSessionRequest);
+app.get('/mcp', requireMcpAuth, (_req, res) => {
+  res.status(405).set('Allow', 'POST, DELETE').send('Method Not Allowed');
+});
 app.delete('/mcp', requireMcpAuth, handleSessionRequest);
 
 const listener = app.listen(port, host, error => {
