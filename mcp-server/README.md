@@ -1,6 +1,6 @@
 # Kraviona MCP Server
 
-Local stdio MCP server for the Kraviona platform API. It exposes authenticated tools for posts, categories, services, client enquiries, website settings, AI drafts, and the keyword queue.
+MCP server for the Kraviona platform API. It supports local stdio and authenticated Streamable HTTP for production. It exposes tools for posts, categories, services, client enquiries, website settings, crawler files, AI drafts, and the keyword queue.
 
 ## Configure
 
@@ -43,3 +43,45 @@ node --env-file=/absolute/path/to/mcp-server/.env.production /absolute/path/to/m
 ```
 
 For Codex, configure this command under `[mcp_servers.kraviona_production]` in `~/.codex/config.toml`. The MCP process runs locally while all CMS operations use `https://api.kraviona.site`. Restart Codex after changing MCP configuration.
+
+## Render production web service
+
+Create a separate Render Web Service from the monorepo using these values:
+
+```text
+Name: kraviona-site-mcp
+Language: Node
+Branch: main
+Root Directory: mcp-server
+Build Command: npm install
+Start Command: npm run start:http
+Health Check Path: /health
+```
+
+Set these Render environment variables:
+
+```text
+NODE_VERSION=22
+KRAVIONA_API_URL=https://api.kraviona.site
+KRAVIONA_ADMIN_EMAIL=<production admin email>
+KRAVIONA_ADMIN_PASSWORD=<production admin password>
+MCP_BEARER_TOKEN=<a unique random secret of at least 24 characters>
+```
+
+Generate the bearer token locally with `openssl rand -hex 32`. Do not use the admin password as the bearer token. After deployment, verify the public health URL at `https://YOUR-RENDER-SERVICE.onrender.com/health`. The MCP endpoint is `https://YOUR-RENDER-SERVICE.onrender.com/mcp` and requires `Authorization: Bearer <MCP_BEARER_TOKEN>`.
+
+Remote Codex configuration:
+
+```toml
+[mcp_servers.kraviona_remote]
+url = "https://YOUR-RENDER-SERVICE.onrender.com/mcp"
+bearer_token_env_var = "KRAVIONA_MCP_TOKEN"
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+```
+
+Export `KRAVIONA_MCP_TOKEN` in the environment that starts Codex, then restart Codex. Test the production HTTP transport before deployment with:
+
+```bash
+npm run test:http -w mcp-server
+```

@@ -41,8 +41,17 @@ try {
   await client.connect(transport);
   const tools = await client.listTools();
   if (tools.tools.length < 20) throw new Error(`Expected at least 20 tools, received ${tools.tools.length}`);
+
+  const healthTool = await client.callTool({ name: 'cms_health', arguments: {} });
+  if (healthTool.isError) throw new Error(`Backend health tool failed: ${healthTool.content?.[0]?.text}`);
+
+  if (process.env.KRAVIONA_ADMIN_EMAIL && process.env.KRAVIONA_ADMIN_PASSWORD) {
+    const posts = await client.callTool({ name: 'list_posts', arguments: { status: 'all', limit: 2 } });
+    if (posts.isError) throw new Error(`Authenticated production API call failed: ${posts.content?.[0]?.text}`);
+  }
+
   await client.close();
-  console.log(`HTTP MCP smoke test passed: bearer auth enforced and ${tools.tools.length} tools available.`);
+  console.log(`HTTP MCP smoke test passed: bearer auth enforced, ${tools.tools.length} tools available, backend API reachable${process.env.KRAVIONA_ADMIN_EMAIL ? ', authenticated API access confirmed' : ''}.`);
 } finally {
   child.kill('SIGTERM');
 }
