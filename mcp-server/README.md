@@ -33,3 +33,13 @@ Never commit real credentials. The server signs in through the normal Kraviona A
 ```
 
 Run `npm test -w mcp-server` while the backend is running to verify tool discovery and API connectivity.
+
+## Production API setup
+
+Keep production credentials in the ignored `mcp-server/.env.production` file, then start the stdio server with Node's environment-file support:
+
+```bash
+node --env-file=/absolute/path/to/mcp-server/.env.production /absolute/path/to/mcp-server/src/index.js
+```
+
+For Codex, configure this command under `[mcp_servers.kraviona_production]` in `~/.codex/config.toml`. The MCP process runs locally while all CMS operations use `https://api.kraviona.site`. Restart Codex after changing MCP configuration.

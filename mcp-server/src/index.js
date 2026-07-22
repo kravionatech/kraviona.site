@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { pathToFileURL } from 'node:url';
 import { z } from 'zod';
 import { api } from './api.js';
 
+export function createMcpServer() {
 const server = new McpServer({ name: 'kraviona-cms', version: '1.0.0' });
 const result = data => ({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
 const failure = error => ({ content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }], isError: true });
@@ -36,6 +38,12 @@ tool('generate_ai_draft', { title: 'Generate AI draft', description: 'Ask the co
 tool('list_keyword_queue', { title: 'List automation queue', description: 'List pending and used keywords for automated content generation.', inputSchema:z.object({}),annotations:{readOnlyHint:true} }, () => api.request('/keyword-queue'));
 tool('add_keyword', { title: 'Add keyword to automation queue', description: 'Add a keyword and target category to the automatic generation queue.', inputSchema:z.object({keyword:z.string().min(2),targetCategory:z.string().min(1),priority:z.number().int().default(0)}) }, payload => api.request('/keyword-queue',{method:'POST',body:JSON.stringify(payload)}));
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
-process.on('SIGINT', async () => { await server.close(); process.exit(0); });
+return server;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const server = createMcpServer();
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  process.on('SIGINT', async () => { await server.close(); process.exit(0); });
+}

@@ -2,6 +2,7 @@ node_modules
 .next
 .env
 .env.local
+.env.production
 coverage
 *.log
 .DS_Store
