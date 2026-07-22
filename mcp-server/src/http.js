@@ -12,10 +12,12 @@ import { KravionaOAuthProvider } from './oauth.js';
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4100);
 const bearerToken = process.env.MCP_BEARER_TOKEN?.trim();
-const inferredPublicUrl = process.env.RENDER_EXTERNAL_URL
+const inferredPublicUrl = process.env.MCP_PUBLIC_URL
+  || process.env.RAILWAY_PUBLIC_DOMAIN && `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+  || process.env.RENDER_EXTERNAL_URL
   || (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : undefined)
   || `http://127.0.0.1:${port}`;
-const publicUrl = new URL(process.env.MCP_PUBLIC_URL || inferredPublicUrl);
+const publicUrl = new URL(inferredPublicUrl);
 const resourceUrl = new URL('/mcp', publicUrl);
 
 if (!bearerToken || bearerToken.length < 24) {

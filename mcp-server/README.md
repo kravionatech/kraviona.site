@@ -96,3 +96,6 @@ https://YOUR-RENDER-SERVICE.onrender.com/mcp
 ```
 
 The server advertises OAuth protected-resource and authorization-server metadata, supports Claude Dynamic Client Registration, and enforces PKCE. Clicking **Connect** opens the Kraviona consent screen. Enter the same value stored in `MCP_BEARER_TOKEN`; Claude receives a revocable OAuth access token and never receives the backend admin password.
+# mcp-kraviona
+# mcp-kraviona
+# mcp-kraviona
