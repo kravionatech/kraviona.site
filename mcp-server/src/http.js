@@ -1,13 +1,22 @@
 #!/usr/bin/env node
-import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
+import express from 'express';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
+import { getOAuthProtectedResourceMetadataUrl, mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
+import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createMcpServer } from './index.js';
+import { KravionaOAuthProvider } from './oauth.js';
 
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4100);
 const bearerToken = process.env.MCP_BEARER_TOKEN?.trim();
+const inferredPublicUrl = process.env.RENDER_EXTERNAL_URL
+  || (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : undefined)
+  || `http://127.0.0.1:${port}`;
+const publicUrl = new URL(process.env.MCP_PUBLIC_URL || inferredPublicUrl);
+const resourceUrl = new URL('/mcp', publicUrl);
 
 if (!bearerToken || bearerToken.length < 24) {
   console.error('MCP_BEARER_TOKEN is required and must contain at least 24 characters.');
@@ -16,31 +25,44 @@ if (!bearerToken || bearerToken.length < 24) {
 
 const app = createMcpExpressApp({ host });
 const sessions = new Map();
+const oauthProvider = new KravionaOAuthProvider({ accessKey: bearerToken, resourceUrl });
+const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(resourceUrl);
+const requireMcpAuth = requireBearerAuth({
+  verifier: oauthProvider,
+  requiredScopes: ['mcp:tools'],
+  resourceMetadataUrl
+});
 
-function tokenMatches(value) {
-  if (!value?.startsWith('Bearer ')) return false;
-  const supplied = Buffer.from(value.slice(7));
-  const expected = Buffer.from(bearerToken);
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
-}
+app.get('/.well-known/oauth-protected-resource', (_req, res) => res.json({
+  resource: resourceUrl.href,
+  authorization_servers: [publicUrl.href],
+  scopes_supported: ['mcp:tools'],
+  bearer_methods_supported: ['header'],
+  resource_name: 'Kraviona CMS'
+}));
 
-function requireBearerToken(req, res, next) {
-  if (!tokenMatches(req.get('authorization'))) {
-    res.set('WWW-Authenticate', 'Bearer realm="kraviona-mcp"');
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  next();
-}
+app.post('/oauth/approve', express.urlencoded({ extended: false }), (req, res) => {
+  oauthProvider.approve(req.body.request_id, req.body.access_key, res);
+});
+
+app.use(mcpAuthRouter({
+  provider: oauthProvider,
+  issuerUrl: publicUrl,
+  baseUrl: publicUrl,
+  resourceServerUrl: resourceUrl,
+  scopesSupported: ['mcp:tools'],
+  resourceName: 'Kraviona CMS'
+}));
 
 app.get('/', (_req, res) => {
-  res.json({ name: 'Kraviona MCP Server', status: 'online', endpoint: '/mcp' });
+  res.json({ name: 'Kraviona MCP Server', status: 'online', endpoint: '/mcp', oauth: true });
 });
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, service: 'kraviona-mcp', transport: 'streamable-http' });
 });
 
-app.post('/mcp', requireBearerToken, async (req, res) => {
+app.post('/mcp', requireMcpAuth, async (req, res) => {
   const sessionId = req.get('mcp-session-id');
 
   try {
@@ -89,12 +111,12 @@ async function handleSessionRequest(req, res) {
   await session.transport.handleRequest(req, res);
 }
 
-app.get('/mcp', requireBearerToken, handleSessionRequest);
-app.delete('/mcp', requireBearerToken, handleSessionRequest);
+app.get('/mcp', requireMcpAuth, handleSessionRequest);
+app.delete('/mcp', requireMcpAuth, handleSessionRequest);
 
 const listener = app.listen(port, host, error => {
   if (error) throw error;
-  console.log(`Kraviona MCP listening on ${host}:${port}`);
+  console.log(`Kraviona MCP listening on ${host}:${port} (${resourceUrl.href})`);
 });
 
 async function shutdown() {

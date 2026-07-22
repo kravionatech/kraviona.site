@@ -66,6 +66,7 @@ KRAVIONA_API_URL=https://api.kraviona.site
 KRAVIONA_ADMIN_EMAIL=<production admin email>
 KRAVIONA_ADMIN_PASSWORD=<production admin password>
 MCP_BEARER_TOKEN=<a unique random secret of at least 24 characters>
+MCP_PUBLIC_URL=https://YOUR-RENDER-SERVICE.onrender.com
 ```
 
 Generate the bearer token locally with `openssl rand -hex 32`. Do not use the admin password as the bearer token. After deployment, verify the public health URL at `https://YOUR-RENDER-SERVICE.onrender.com/health`. The MCP endpoint is `https://YOUR-RENDER-SERVICE.onrender.com/mcp` and requires `Authorization: Bearer <MCP_BEARER_TOKEN>`.
@@ -85,3 +86,13 @@ Export `KRAVIONA_MCP_TOKEN` in the environment that starts Codex, then restart C
 ```bash
 npm run test:http -w mcp-server
 ```
+
+## Claude custom connector
+
+Use the full Streamable HTTP URL when adding the connector:
+
+```text
+https://YOUR-RENDER-SERVICE.onrender.com/mcp
+```
+
+The server advertises OAuth protected-resource and authorization-server metadata, supports Claude Dynamic Client Registration, and enforces PKCE. Clicking **Connect** opens the Kraviona consent screen. Enter the same value stored in `MCP_BEARER_TOKEN`; Claude receives a revocable OAuth access token and never receives the backend admin password.
