@@ -1,4 +1,4 @@
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://kraviona.site').replace(/\/$/, '');
+export const SITE_URL = ('https://kraviona.site').replace(/\/$/, '');
 export const SITE_NAME = 'Kraviona';
 export const SITE_DESCRIPTION = 'Independent, deeply researched ideas on technology, growth, modern work, and building durable businesses.';
 
