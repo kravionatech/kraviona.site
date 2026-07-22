@@ -7,10 +7,12 @@ import routes from './routes/index.js';
 import { errorHandler } from './middleware/index.js';
 import { startCron } from './jobs/autoGeneratePost.cron.js';
 import { ensureDefaultServices } from './services/serviceCatalog.js';
+import { ensureInitialAdmin } from './services/bootstrapAdmin.js';
 
 for (const key of ['MONGO_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']) if (!process.env[key]) { console.error(`Missing ${key}`); process.exit(1); }
 await mongoose.connect(process.env.MONGO_URI);
 await ensureDefaultServices();
+await ensureInitialAdmin();
 const app = express();
 app.set('trust proxy', 1);
 const configuredOrigins = [process.env.CLIENT_URL, process.env.ADMIN_URL, process.env.CORS_ORIGINS]

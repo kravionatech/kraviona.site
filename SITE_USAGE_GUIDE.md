@@ -107,7 +107,12 @@ NODE_ENV=production
 CLIENT_URL=https://kraviona.site
 ADMIN_URL=https://studio.kraviona.site
 CORS_ORIGINS=https://kraviona.site,https://www.kraviona.site,https://kraviona.com,https://www.kraviona.com,https://studio.kraviona.site
+ADMIN_EMAIL=your-production-admin@example.com
+ADMIN_PASSWORD=use-a-unique-password-with-at-least-12-characters
+ADMIN_NAME=Kraviona Administrator
 ```
+
+On startup the backend creates this administrator only when it does not already exist. Repeated deployments do not create duplicates. You can also run `npm run bootstrap:admin` from the backend service shell to verify or create the configured account manually.
 
 Public frontend variables:
 
