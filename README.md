@@ -22,4 +22,6 @@ Automated posts publish unless `AUTO_PUBLISH=false`; manual AI generations alway
 Open `http://localhost:3001` and sign in with an administrator account. The Studio supports full story editing (semantic rich text, images, alt text, takeaways, FAQs, tags, author identity, SEO and social previews), category SEO, AI drafts and queue management, comment moderation, subscriber management, user roles, and global website settings.
 
 Site settings control the public brand name, tagline, homepage hero, newsletter copy, default metadata, social image, and social profiles. Public pages read these settings dynamically. Configure `CLOUDINARY_URL` to enable direct image uploads; editors can always paste a hosted image URL as a fallback.
+
+Services and project enquiries are also API-driven. Editors can publish, feature and reorder services, connect each one to its verified `kraviona.com` detail page, and manage incoming client briefs through the Studio. See [SITE_USAGE_GUIDE.md](./SITE_USAGE_GUIDE.md) for the complete operating and production setup guide.
 # kraviona.site
