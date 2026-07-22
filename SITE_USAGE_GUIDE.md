@@ -74,11 +74,22 @@ Add the following to your MCP host configuration, replacing the credentials:
 }
 ```
 
-The MCP exposes 20 tools for posts, categories, services, enquiries, site settings, AI drafts and the keyword queue. Test it while the backend is running:
+The MCP exposes 21 tools for posts, categories, services, enquiries, crawler controls, site settings, AI drafts and the keyword queue. Test it while the backend is running:
 
 ```bash
 npm run test:mcp
 ```
+
+## Manage robots, sitemap and AI discovery
+
+Open **Crawlers & AI** in the admin. This screen controls four live, database-driven files:
+
+- `robots.txt`: search-engine access, AI crawler access and disallowed paths
+- `sitemap.xml`: automatic published post/category URLs and page inclusion switches
+- `llms.txt`: AI-readable site introduction, citation instructions, services, categories and current articles
+- `ai.txt`: crawler permission, training permission, attribution requirement and custom usage policy
+
+Use the four preview cards in the admin to inspect the generated output after saving. These routes are server-rendered dynamically and do not require a new frontend build when their settings or published content changes. The MCP exposes the same controls through `update_crawler_settings`.
 
 ## Production domain and CORS setup
 
