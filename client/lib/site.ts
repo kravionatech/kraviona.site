@@ -1,4 +1,15 @@
-export const SITE_URL = ('https://kraviona.site').replace(/\/$/, '');
+function normalizeUrl(value: string | undefined, fallback: string) {
+  if (!value) return fallback;
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/$/, '');
+  return `https://${trimmed.replace(/\/$/, '')}`;
+}
+
+export const SITE_URL = normalizeUrl(
+  process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL || process.env.APP_URL,
+  process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://kraviona.site'
+);
 export const SITE_NAME = 'Kraviona';
 export const SITE_DESCRIPTION = 'Independent, deeply researched ideas on technology, growth, modern work, and building durable businesses.';
 
