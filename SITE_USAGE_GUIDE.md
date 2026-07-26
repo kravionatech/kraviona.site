@@ -95,7 +95,7 @@ Use the four preview cards in the admin to inspect the generated output after sa
 
 Recommended production layout:
 
-- Public website: `https://kraviona.site`
+- Public website: `https://www.kraviona.site`
 - Admin: `https://studio.kraviona.site`
 - API: `https://api.kraviona.site`
 - Official company: `https://www.kraviona.com`
@@ -104,7 +104,7 @@ Backend variables:
 
 ```text
 NODE_ENV=production
-CLIENT_URL=https://kraviona.site
+CLIENT_URL=https://www.kraviona.site
 ADMIN_URL=https://studio.kraviona.site
 CORS_ORIGINS=https://kraviona.site,https://www.kraviona.site,https://kraviona.com,https://www.kraviona.com,https://studio.kraviona.site
 ADMIN_EMAIL=your-production-admin@example.com
@@ -118,14 +118,14 @@ Public frontend variables:
 
 ```text
 NEXT_PUBLIC_API_URL=https://api.kraviona.site/api
-NEXT_PUBLIC_SITE_URL=https://kraviona.site
+NEXT_PUBLIC_SITE_URL=https://www.kraviona.site
 ```
 
 Admin variables:
 
 ```text
 NEXT_PUBLIC_API_URL=https://api.kraviona.site/api
-NEXT_PUBLIC_CLIENT_URL=https://kraviona.site
+NEXT_PUBLIC_CLIENT_URL=https://www.kraviona.site
 ```
 
 The API permits the Kraviona production domains, configured extra origins, and local origins only outside production. Credentialed admin requests and preflight requests are enabled. Do not use `*` with credentialed CORS.

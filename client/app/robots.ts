@@ -2,7 +2,7 @@ import type {MetadataRoute} from 'next';
 import {api} from '../lib/api';
 import {SITE_URL} from '../lib/site';
 
-export const dynamic='force-dynamic';
+export const revalidate=3600;
 
 export default async function robots():Promise<MetadataRoute.Robots>{
   let settings:any={};try{settings=await api('/settings')}catch{}

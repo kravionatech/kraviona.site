@@ -2,16 +2,19 @@ import { api } from '../../../lib/api';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { jsonLd, SITE_DESCRIPTION, SITE_URL } from '../../../lib/site';
+import { DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_URL, truncate } from '../../../lib/site';
 import './category.css';
 
 async function getCategory(slug: string) { const cats = await api('/categories'); return cats.find((x: any) => x.slug === slug); }
-export async function generateMetadata({ params }: { params: Promise<{slug:string}> }): Promise<Metadata> { const {slug}=await params;try{const c=await getCategory(slug);if(!c)return{robots:{index:false,follow:false}};const title=c.seo?.metaTitle||`${c.name} ideas and guides`;const description=(c.seo?.metaDescription||c.description||SITE_DESCRIPTION).slice(0,160);return{title,description,alternates:{canonical:`/category/${c.slug}`},openGraph:{type:'website',url:`/category/${c.slug}`,title,description},robots:{index:true,follow:true}}}catch{return{robots:{index:false,follow:false}}} }
+export async function generateMetadata({ params }: { params: Promise<{slug:string}> }): Promise<Metadata> { const {slug}=await params;try{const c=await getCategory(slug);if(!c)return{title:'Category not found',robots:{index:false,follow:false}};const title=truncate(c.seo?.metaTitle||`${c.name} ideas and guides`,60);const description=truncate(c.seo?.metaDescription||c.description||SITE_DESCRIPTION,160);const canonical=`/category/${c.slug}`;const index=!c.seo?.isNoIndex;return{title,description,alternates:{canonical},openGraph:{type:'website',url:canonical,title,description,images:[{url:DEFAULT_OG_IMAGE,width:1200,height:630,alt:title}]},twitter:{card:'summary_large_image',title,description,images:[DEFAULT_OG_IMAGE]},robots:{index,follow:true,googleBot:{index,follow:true,'max-image-preview':'large','max-snippet':-1,'max-video-preview':-1}}}}catch{return{robots:{index:false,follow:false}}} }
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const slug = (await params).slug;
   let category: any, categories: any[] = [], data = {items:[] as any[],total:0};
-  try { categories = await api('/categories'); category = categories.find((x:any)=>x.slug===slug); if(!category) return notFound(); data = await api(`/posts?category=${category._id}&limit=50`); } catch { return notFound(); }
+  categories = await api('/categories');
+  category = categories.find((x:any)=>x.slug===slug);
+  if(!category) return notFound();
+  data = await api(`/posts?category=${category._id}&limit=50`);
   const [featured,...stories]=data.items;
   const canonical=`${SITE_URL}/category/${slug}`;
   const ld=[{'@context':'https://schema.org','@type':'CollectionPage','@id':canonical,name:category.name,description:category.description,url:canonical,isPartOf:{'@id':`${SITE_URL}/#website`},mainEntity:{'@type':'ItemList',numberOfItems:data.items.length,itemListElement:data.items.map((p:any,i:number)=>({'@type':'ListItem',position:i+1,name:p.title,url:`${SITE_URL}/blog/${p.slug}`}))}},{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:SITE_URL},{'@type':'ListItem',position:2,name:'Journal',item:`${SITE_URL}/blog`},{'@type':'ListItem',position:3,name:category.name,item:canonical}]}];
@@ -22,7 +25,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         <div className="cover-grid"><h1>{category.name}</h1><div><p>{category.description || `The latest Kraviona thinking about ${category.name.toLowerCase()}.`}</p><span className="cover-count">{String(data.total).padStart(2,'0')} published {data.total===1?'story':'stories'}</span></div></div>
       </div>
     </section>
-    <main className="wrap category-main">
+    <div className="wrap category-main">
       <div className="category-tabs"><span>Explore</span>{categories.map(c=><a className={c._id===category._id?'active':''} href={`/category/${c.slug}`} key={c._id}>{c.name}</a>)}</div>
       {featured ? <>
         <div className="category-label"><span>Featured in {category.name}</span><span>Latest story</span></div>
@@ -33,7 +36,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         {stories.length>0&&<section className="more-stories"><div className="category-label"><span>More from {category.name}</span><span>{stories.length} {stories.length===1?'story':'stories'}</span></div><div className="story-list">{stories.map((p:any,i:number)=><a href={`/blog/${p.slug}`} className="story-row" key={p._id}><span className="story-number">{String(i+2).padStart(2,'0')}</span><div className="story-thumb">{p.featuredImage?.url&&<Image fill sizes="180px" src={p.featuredImage.url} alt={p.featuredImage.alt||p.title}/>}</div><div className="story-copy"><span className="tag">{category.name}</span><h3>{p.title}</h3><p>{p.quickAnswer}</p></div><span className="row-arrow">↗</span></a>)}</div></section>}
       </> : <div className="empty-state"><div className="eyebrow">Nothing published yet</div><h2>Our first {category.name} story is in progress.</h2><a className="btn" href="/blog">Browse all stories</a></div>}
       <section className="category-cta"><div><span className="eyebrow">Stay curious</span><h2>Ideas that respect your time.</h2></div><p>Get the strongest Kraviona story delivered once a week.</p><a className="btn" href="/newsletter">Join the briefing →</a></section>
-    </main>
+    </div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(ld)}}/>
   </>;
 }

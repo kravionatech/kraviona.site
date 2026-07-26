@@ -14,7 +14,7 @@ const r = Router();
 const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const cookie = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', path: '/' };
 const tokens = u => ({ access: jwt.sign({ id: u.id, role: u.role, name: u.name }, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' }), refresh: jwt.sign({ id: u.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' }) });
-const siteBase = () => (process.env.CLIENT_URL || 'https://kraviona.site').replace(/\/$/, '');
+const siteBase = () => (process.env.CLIENT_URL || 'https://www.kraviona.site').replace(/\/$/, '');
 function requireAdminQuery(req) { try { const data = jwt.verify(req.cookies.accessToken || req.headers.authorization?.replace('Bearer ', ''), process.env.JWT_ACCESS_SECRET); if (data.role !== 'admin') throw new Error(); return data; } catch { throw Object.assign(new Error('Admin access required'), { status: 401 }); } }
 function normalizePost(body, existing = {}) {
   const title = String(body.title ?? existing.title ?? '').trim();

@@ -1,15 +1,17 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { api } from '../../lib/api';
 import PostCard from '../../components/PostCard';
-import { jsonLd, SITE_DESCRIPTION, SITE_URL } from '../../lib/site';
+import { DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_URL } from '../../lib/site';
 import './blog-v2.css';
 
 type Query={page?:string;search?:string};
-export async function generateMetadata({searchParams}:{searchParams:Promise<Query>}):Promise<Metadata>{const q=await searchParams;const page=Math.max(1,Number(q.page)||1);const search=(q.search||'').trim();const canonical=page>1?`/blog?page=${page}`:'/blog';return{title:search?`Search results for “${search}”`:(page>1?`Journal — Page ${page}`:'Journal'),description:search?`Search Kraviona stories for ${search}.`:'Independent essays and practical guides on technology, growth, ideas, and modern work.',alternates:{canonical:search?'/blog':canonical},robots:search?{index:false,follow:true}:{index:true,follow:true},openGraph:{type:'website',url:canonical,title:page>1?`Kraviona Journal — Page ${page}`:'The Kraviona Journal',description:SITE_DESCRIPTION}}}
+export async function generateMetadata({searchParams}:{searchParams:Promise<Query>}):Promise<Metadata>{const q=await searchParams;const page=Math.max(1,Number(q.page)||1);const search=(q.search||'').trim();const canonical=page>1?`/blog?page=${page}`:'/blog';const title=search?`Search results for “${search}”`:(page>1?`Journal — Page ${page}`:'Journal');const socialTitle=page>1?`Kraviona Journal — Page ${page}`:'The Kraviona Journal';const description=search?`Search Kraviona stories for ${search}.`:'Independent essays and practical guides on technology, growth, ideas, and modern work.';return{title,description,alternates:{canonical:search?'/blog':canonical},robots:search?{index:false,follow:true}:{index:true,follow:true},openGraph:{type:'website',url:canonical,title:socialTitle,description,images:[{url:DEFAULT_OG_IMAGE,width:1200,height:630,alt:socialTitle}]},twitter:{card:'summary_large_image',title:socialTitle,description,images:[DEFAULT_OG_IMAGE]}}}
 
 export default async function Blog({ searchParams }: { searchParams: Promise<Query> }) {
   const q=await searchParams;const page=Math.max(1,Number(q.page)||1);const search=(q.search||'').trim();
   const [data,categories]=await Promise.all([api(`/posts?page=${page}&limit=12&search=${encodeURIComponent(search)}`),api('/categories')]);
+  if(!search&&page>1&&(!data.items?.length||page>data.pages)) notFound();
   const canonical=page>1?`${SITE_URL}/blog?page=${page}`:`${SITE_URL}/blog`;
   const ld=[{'@context':'https://schema.org','@type':'CollectionPage','@id':canonical,url:canonical,name:search?`Search results for ${search}`:'The Kraviona Journal',description:SITE_DESCRIPTION,isPartOf:{'@id':`${SITE_URL}/#website`},mainEntity:{'@type':'ItemList',numberOfItems:data.items.length,itemListElement:data.items.map((p:any,i:number)=>({'@type':'ListItem',position:(page-1)*12+i+1,url:`${SITE_URL}/blog/${p.slug}`,name:p.title}))}},{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:SITE_URL},{'@type':'ListItem',position:2,name:'Journal',item:`${SITE_URL}/blog`}]}];
   return <>

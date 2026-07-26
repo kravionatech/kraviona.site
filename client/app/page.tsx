@@ -2,15 +2,22 @@ import type { Metadata } from 'next';
 import { api } from '../lib/api';
 import PostCard from '../components/PostCard';
 import NewsletterForm from '../components/NewsletterForm';
-import { jsonLd, SITE_DESCRIPTION, SITE_URL } from '../lib/site';
+import { DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_URL } from '../lib/site';
 
-export const metadata: Metadata = { title: { absolute: 'Kraviona — Clear ideas for better work' }, description: SITE_DESCRIPTION, alternates: { canonical: '/' } };
+const homeTitle='Kraviona — Clear ideas for better work';
+export const metadata: Metadata = {
+  title: { absolute: homeTitle },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: '/' },
+  openGraph: { type:'website',url:'/',title:homeTitle,description:SITE_DESCRIPTION,images:[{url:DEFAULT_OG_IMAGE,width:1200,height:630,alt:homeTitle}] },
+  twitter: { card:'summary_large_image',title:homeTitle,description:SITE_DESCRIPTION,images:[DEFAULT_OG_IMAGE] }
+};
 
 export default async function Home() {
   let posts: any[] = [], categories: any[] = [], services:any[]=[], settings:any={};
   try { const [postData, categoryData, serviceData, siteSettings] = await Promise.all([api('/posts?limit=10'), api('/categories'),api('/services'),api('/settings')]); posts=postData.items;categories=categoryData;services=serviceData;settings=siteSettings; } catch {}
   const [featured, ...rest] = posts; const side = rest.slice(0,2); const more=rest.slice(2);
-  const ld={ '@context':'https://schema.org','@type':'CollectionPage','@id':`${SITE_URL}/#home`,url:SITE_URL,name:'Kraviona — Clear ideas for better work',description:SITE_DESCRIPTION,isPartOf:{'@id':`${SITE_URL}/#website`},mainEntity:{'@type':'ItemList',numberOfItems:posts.length,itemListElement:posts.map((p,i)=>({'@type':'ListItem',position:i+1,url:`${SITE_URL}/blog/${p.slug}`,name:p.title}))} };
+  const ld={ '@context':'https://schema.org','@type':'CollectionPage','@id':`${SITE_URL}/#home`,url:SITE_URL,name:homeTitle,description:SITE_DESCRIPTION,isPartOf:{'@id':`${SITE_URL}/#website`},inLanguage:'en-IN',mainEntity:{'@type':'ItemList',numberOfItems:posts.length,itemListElement:posts.map((p,i)=>({'@type':'ListItem',position:i+1,url:`${SITE_URL}/blog/${p.slug}`,name:p.title}))} };
   return <>
     <section className="home-hero wrap"><div className="home-hero__top"><div><div className="eyebrow">{settings.heroEyebrow||'Independent editorial · Est. 2026'}</div><h1>{settings.heroTitle||'Think clearly. Build what lasts.'}</h1><p className="lead">{settings.heroDescription||'Deeply researched ideas on technology, growth, and modern work—for people who prefer signal over noise.'}</p></div><aside className="home-hero__aside"><span>This week at {settings.brandName||'Kraviona'}</span><strong>One strong idea is worth a hundred shallow takes.</strong><p>Read deliberately. Apply what matters. Ignore the rest.</p><a className="text-link" href="/blog">Enter the journal →</a></aside></div></section>
     <div className="wrap topic-strip"><span>Explore topics</span>{categories.map(c=><a href={`/category/${c.slug}`} key={c._id}>{c.name} →</a>)}</div>
