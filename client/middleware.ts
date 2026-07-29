@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const CANONICAL_HOST = 'kraviona.com';
-const LEGACY_HOSTS = new Set(['www.kraviona.com', 'kraviona.site', 'www.kraviona.site']);
+const CANONICAL_HOST = 'kraviona.site';
+const LEGACY_HOSTS = new Set(['www.kraviona.site']);
 
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();

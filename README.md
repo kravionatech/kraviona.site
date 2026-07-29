@@ -23,5 +23,5 @@ Open `http://localhost:3001` and sign in with an administrator account. The Stud
 
 Site settings control the public brand name, tagline, homepage hero, newsletter copy, default metadata, social image, and social profiles. Public pages read these settings dynamically. Configure `CLOUDINARY_URL` to enable direct image uploads; editors can always paste a hosted image URL as a fallback.
 
-Services and project enquiries are also API-driven. Editors can publish, feature and reorder services, connect each one to its verified `kraviona.com` detail page, and manage incoming client briefs through the Studio. See [SITE_USAGE_GUIDE.md](./SITE_USAGE_GUIDE.md) for the complete operating and production setup guide.
-# kraviona.com
+Services and project enquiries are also API-driven. Editors can publish, feature and reorder services, connect each one to its verified `kraviona.site` detail page, and manage incoming client briefs through the Studio. See [SITE_USAGE_GUIDE.md](./SITE_USAGE_GUIDE.md) for the complete operating and production setup guide.
+# kraviona.site

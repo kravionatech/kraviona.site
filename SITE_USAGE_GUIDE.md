@@ -32,7 +32,7 @@ Categories are dynamic. Create or edit them under **Categories**; public navigat
 ## Manage services and client leads
 
 1. Open **Services** in the admin.
-2. Create or edit a service, its deliverables, display order and official `kraviona.com` detail URL.
+2. Create or edit a service, its deliverables, display order and official `kraviona.site` detail URL.
 3. Enable **Feature this service on the homepage** for up to three priority services.
 4. Set the status to **Published** to show it publicly.
 5. Visitors can submit a project brief at `/services#contact`.
@@ -52,7 +52,7 @@ Open **Site settings** in the admin. You can change:
 - Homepage and newsletter copy
 - Default SEO metadata and social profiles
 
-The public header and footer identify [kraviona.com](https://kraviona.com/) as the official Kraviona Tech Solutions website. Service cards link to verified official service pages, and the footer includes a permanent official-site trust link.
+The public header and footer identify [kraviona.site](https://kraviona.site/) as the official Kraviona Tech Solutions website. Service cards link to verified official service pages, and the footer includes a permanent official-site trust link.
 
 ## Use the MCP server
 
@@ -95,18 +95,18 @@ Use the four preview cards in the admin to inspect the generated output after sa
 
 Recommended production layout:
 
-- Public website: `https://kraviona.com`
+- Public website: `https://kraviona.site`
 - Admin: `https://studio.kraviona.site`
 - API: `https://api.kraviona.site`
-- Official company: `https://kraviona.com`
+- Official company: `https://kraviona.site`
 
 Backend variables:
 
 ```text
 NODE_ENV=production
-CLIENT_URL=https://kraviona.com
+CLIENT_URL=https://kraviona.site
 ADMIN_URL=https://studio.kraviona.site
-CORS_ORIGINS=https://kraviona.com,https://studio.kraviona.site
+CORS_ORIGINS=https://kraviona.site,https://studio.kraviona.site
 ADMIN_EMAIL=your-production-admin@example.com
 ADMIN_PASSWORD=use-a-unique-password-with-at-least-12-characters
 ADMIN_NAME=Kraviona Administrator
@@ -118,14 +118,14 @@ Public frontend variables:
 
 ```text
 NEXT_PUBLIC_API_URL=https://api.kraviona.site/api
-NEXT_PUBLIC_SITE_URL=https://kraviona.com
+NEXT_PUBLIC_SITE_URL=https://kraviona.site
 ```
 
 Admin variables:
 
 ```text
 NEXT_PUBLIC_API_URL=https://api.kraviona.site/api
-NEXT_PUBLIC_CLIENT_URL=https://kraviona.com
+NEXT_PUBLIC_CLIENT_URL=https://kraviona.site
 ```
 
 The API permits the Kraviona production domains, configured extra origins, and local origins only outside production. Credentialed admin requests and preflight requests are enabled. Do not use `*` with credentialed CORS.
@@ -137,4 +137,5 @@ The API permits the Kraviona production domains, configured extra origins, and l
 - Create an admin account and remove any demo credentials.
 - Confirm all production environment URLs use HTTPS.
 - Run `npm run build`, `npm test`, and `npm run test:mcp`.
+- Run `npm run migrate:canonical-domain -w backend` once after deploying the `.site` canonical-domain change, to update saved URLs in MongoDB.
 - Submit `/sitemap.xml` in Google Search Console after launch.

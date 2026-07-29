@@ -2,7 +2,7 @@
 import {useEffect,useState} from 'react';
 import {call} from '../../lib/api';
 
-const blank={title:'',slug:'',eyebrow:'Kraviona service',summary:'',deliverables:[''],status:'draft',featured:false,order:0,officialUrl:'https://kraviona.com/services',seo:{metaTitle:'',metaDescription:''}};
+const blank={title:'',slug:'',eyebrow:'Kraviona service',summary:'',deliverables:[''],status:'draft',featured:false,order:0,officialUrl:'https://kraviona.site/services',seo:{metaTitle:'',metaDescription:''}};
 export default function ServicesAdmin(){
   const [items,setItems]=useState<any[]>([]),[form,setForm]=useState<any>(blank),[selected,setSelected]=useState(''),[msg,setMsg]=useState('');
   async function load(){setItems(await call('/services?status=all'))}useEffect(()=>{load()},[]);

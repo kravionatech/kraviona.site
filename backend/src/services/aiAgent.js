@@ -13,6 +13,6 @@ export async function generatePost({ topic, category, mode = 'manual' }) {
   const wordCount = parsed.content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
   if (wordCount < 800 || JSON.stringify(parsed).includes('undefined')) throw Object.assign(new Error('Generated post failed SEO validation'), { status: 422 });
   const slug = slugify(parsed.slug || parsed.title, { lower: true, strict: true });
-  const base = 'https://kraviona.com';
+  const base = 'https://kraviona.site';
   return Post.create({ title: parsed.title, slug, content: parsed.content, quickAnswer: parsed.quickAnswer, keyTakeaways: parsed.keyTakeaways, faqs: parsed.faqs, category, tags: parsed.tags, author: { name: process.env.AUTHOR_NAME || 'Kraviona Editorial Team', slug: 'kraviona-editorial-team', sameAs: (process.env.AUTHOR_PROFILES || `${base}/about`).split(',').filter(Boolean) }, seo: { metaTitle: parsed.metaTitle, metaDescription: parsed.metaDescription, canonicalUrl: `${base}/blog/${slug}`, isNoIndex: mode !== 'auto' }, generatedBy: mode === 'auto' ? 'ai-auto' : 'ai-manual', status: mode === 'auto' && process.env.AUTO_PUBLISH !== 'false' ? 'published' : 'draft' });
 }

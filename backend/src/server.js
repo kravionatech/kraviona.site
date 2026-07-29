@@ -17,7 +17,7 @@ const app = express();
 app.set('trust proxy', 1);
 const configuredOrigins = [process.env.CLIENT_URL, process.env.ADMIN_URL, process.env.CORS_ORIGINS]
   .filter(Boolean).flatMap(value => value.split(',')).map(value => value.trim().replace(/\/$/, ''));
-const productionOrigins = ['https://kraviona.com'];
+const productionOrigins = ['https://kraviona.site'];
 const allowedOrigins = new Set([...configuredOrigins, ...productionOrigins]);
 const isAllowedOrigin = origin => !origin || allowedOrigins.has(origin.replace(/\/$/, '')) ||
   (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) && process.env.NODE_ENV !== 'production');

@@ -32,7 +32,7 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
     <main id="main-content">{children}</main>
     <footer className="site-footer">
       <div className="wrap footer-top">
-        <div className="footer-pitch"><a className="brand brand--light" href="/">{brand.toLowerCase()}<span>.</span></a><p>{description}</p><a className="official-badge" href={official} target="_blank" rel="noopener noreferrer"><b>Verified company website</b><span>kraviona.com ↗</span></a></div>
+        <div className="footer-pitch"><a className="brand brand--light" href="/">{brand.toLowerCase()}<span>.</span></a><p>{description}</p><a className="official-badge" href={official} target="_blank" rel="noopener noreferrer"><b>Verified company website</b><span>kraviona.site ↗</span></a></div>
         <div><span className="footer-label">Read</span><div className="footer-nav"><a href="/blog">All stories</a>{categories.slice(0,3).map(c=><a href={`/category/${c.slug}`} key={c._id}>{c.name}</a>)}<a href="/feed.xml">RSS feed</a></div></div>
         <div className="footer-company"><span className="footer-label">Build with Kraviona</span><h3>Need a faster product or stronger growth engine?</h3><p>Talk directly with the team behind Kraviona.</p><div className="footer-company__links"><a href="/services#contact">Start a project →</a><a href={`mailto:${email}`}>{email}</a><a href={official} target="_blank" rel="noopener noreferrer">Official company site ↗</a></div></div>
       </div>

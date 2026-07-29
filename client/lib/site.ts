@@ -9,7 +9,7 @@ function normalizeUrl(value: string | undefined, fallback: string) {
 // This is intentionally not configurable in production. A preview URL, a
 // legacy domain, or a www environment variable must never leak into a
 // canonical URL, sitemap, structured-data identifier, or social tag.
-export const PRODUCTION_SITE_URL = 'https://kraviona.com';
+export const PRODUCTION_SITE_URL = 'https://kraviona.site';
 export const SITE_URL = normalizeUrl(
   process.env.NODE_ENV === 'development'
     ? process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL || process.env.APP_URL
@@ -25,9 +25,9 @@ export function absoluteUrl(path = '/') {
     const url = new URL(path);
     // next/image only accepts the configured HTTPS sources in production, and
     // HTTPS avoids mixed-content social previews and schema image URLs.
-    if (['www.kraviona.com', 'kraviona.site', 'www.kraviona.site'].includes(url.hostname)) {
+    if (url.hostname === 'www.kraviona.site') {
       url.protocol = 'https:';
-      url.hostname = 'kraviona.com';
+      url.hostname = 'kraviona.site';
       url.port = '';
     } else if (url.protocol === 'http:' && url.hostname !== 'localhost') url.protocol = 'https:';
     return url.toString();
