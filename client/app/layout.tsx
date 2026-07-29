@@ -8,9 +8,9 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
   const brand=settings.brandName||SITE_NAME;
   const tagline=settings.tagline||'Independent ideas for ambitious minds';
   const description=settings.defaultSeo?.description||SITE_DESCRIPTION;
-  const official=settings.officialSiteUrl||'https://www.kraviona.com';
+  const official=absoluteUrl(settings.officialSiteUrl||SITE_URL).replace(/\/$/, '');
   const email=settings.contactEmail||'kravionatech@gmail.com';
-  const social=[...(settings.socialLinks||[]).map((x:any)=>x.url).filter(Boolean),official];
+  const social=[...(settings.socialLinks||[]).map((x:any)=>absoluteUrl(x.url)).filter(Boolean),official];
   const structuredData={'@context':'https://schema.org','@graph':[
     {'@type':'Organization','@id':`${SITE_URL}/#organization`,name:brand,url:SITE_URL,logo:{'@type':'ImageObject','@id':`${SITE_URL}/#logo`,url:absoluteUrl('/icon.svg'),contentUrl:absoluteUrl('/icon.svg'),width:512,height:512,caption:brand},description,email,telephone:settings.contactPhone,sameAs:[...new Set(social)],contactPoint:{'@type':'ContactPoint',contactType:'customer support',email,telephone:settings.contactPhone,availableLanguage:['English','Hindi'],url:`${SITE_URL}/services#contact`}},
     {'@type':'WebSite','@id':`${SITE_URL}/#website`,name:brand,alternateName:`${brand} Journal`,url:SITE_URL,description,publisher:{'@id':`${SITE_URL}/#organization`},inLanguage:'en-IN',potentialAction:{'@type':'SearchAction',target:{'@type':'EntryPoint',urlTemplate:`${SITE_URL}/blog?search={search_term_string}`},'query-input':'required name=search_term_string'}}

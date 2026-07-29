@@ -52,7 +52,7 @@ Open **Site settings** in the admin. You can change:
 - Homepage and newsletter copy
 - Default SEO metadata and social profiles
 
-The public header and footer identify [kraviona.com](https://www.kraviona.com/) as the official Kraviona Tech Solutions website. Service cards link to verified official service pages, and the footer includes a permanent official-site trust link.
+The public header and footer identify [kraviona.com](https://kraviona.com/) as the official Kraviona Tech Solutions website. Service cards link to verified official service pages, and the footer includes a permanent official-site trust link.
 
 ## Use the MCP server
 
@@ -95,18 +95,18 @@ Use the four preview cards in the admin to inspect the generated output after sa
 
 Recommended production layout:
 
-- Public website: `https://www.kraviona.site`
+- Public website: `https://kraviona.com`
 - Admin: `https://studio.kraviona.site`
 - API: `https://api.kraviona.site`
-- Official company: `https://www.kraviona.com`
+- Official company: `https://kraviona.com`
 
 Backend variables:
 
 ```text
 NODE_ENV=production
-CLIENT_URL=https://www.kraviona.site
+CLIENT_URL=https://kraviona.com
 ADMIN_URL=https://studio.kraviona.site
-CORS_ORIGINS=https://kraviona.site,https://www.kraviona.site,https://kraviona.com,https://www.kraviona.com,https://studio.kraviona.site
+CORS_ORIGINS=https://kraviona.com,https://studio.kraviona.site
 ADMIN_EMAIL=your-production-admin@example.com
 ADMIN_PASSWORD=use-a-unique-password-with-at-least-12-characters
 ADMIN_NAME=Kraviona Administrator
@@ -118,14 +118,14 @@ Public frontend variables:
 
 ```text
 NEXT_PUBLIC_API_URL=https://api.kraviona.site/api
-NEXT_PUBLIC_SITE_URL=https://www.kraviona.site
+NEXT_PUBLIC_SITE_URL=https://kraviona.com
 ```
 
 Admin variables:
 
 ```text
 NEXT_PUBLIC_API_URL=https://api.kraviona.site/api
-NEXT_PUBLIC_CLIENT_URL=https://www.kraviona.site
+NEXT_PUBLIC_CLIENT_URL=https://kraviona.com
 ```
 
 The API permits the Kraviona production domains, configured extra origins, and local origins only outside production. Credentialed admin requests and preflight requests are enabled. Do not use `*` with credentialed CORS.

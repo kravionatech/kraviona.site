@@ -31,7 +31,7 @@ const SiteSettingsSchema = new Schema({
   heroDescription: { type: String, default: 'Deeply researched ideas on technology, growth, and modern work—for people who prefer signal over noise.' },
   briefingTitle: { type: String, default: 'Your inbox deserves better ideas.' }, briefingDescription: { type: String, default: 'One original essay or practical framework every week.' },
   defaultSeo: { title: String, description: String, ogImage: String }, socialLinks: [{ label: String, url: String }],
-  officialSiteUrl: { type: String, default: 'https://www.kraviona.com' },
+  officialSiteUrl: { type: String, default: 'https://kraviona.com' },
   contactEmail: { type: String, default: 'kravionatech@gmail.com' },
   contactPhone: { type: String, default: '+91 96085 53167' },
   whatsappUrl: { type: String, default: 'https://wa.me/919608553167' },

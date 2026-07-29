@@ -17,7 +17,7 @@ const app = express();
 app.set('trust proxy', 1);
 const configuredOrigins = [process.env.CLIENT_URL, process.env.ADMIN_URL, process.env.CORS_ORIGINS]
   .filter(Boolean).flatMap(value => value.split(',')).map(value => value.trim().replace(/\/$/, ''));
-const productionOrigins = ['https://kraviona.site', 'https://www.kraviona.site', 'https://kraviona.com', 'https://www.kraviona.com'];
+const productionOrigins = ['https://kraviona.com'];
 const allowedOrigins = new Set([...configuredOrigins, ...productionOrigins]);
 const isAllowedOrigin = origin => !origin || allowedOrigins.has(origin.replace(/\/$/, '')) ||
   (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) && process.env.NODE_ENV !== 'production');
@@ -30,6 +30,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
+app.use((_, res, next) => { res.set('X-Robots-Tag', 'noindex, nofollow'); next(); });
 app.get('/health', (_, res) => res.json({ ok: true }));
 app.use('/api', routes);
 app.use(errorHandler);
