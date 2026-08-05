@@ -26,6 +26,21 @@ if (!bearerToken || bearerToken.length < 24) {
 }
 
 const app = createMcpExpressApp({ host });
+app.set('trust proxy', 1);
+
+// MCP & CORS headers middleware for all responses
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, mcp-session-id');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 const sessions = new Map();
 const oauthProvider = new KravionaOAuthProvider({ accessKey: bearerToken, resourceUrl });
 const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(resourceUrl);
@@ -61,7 +76,7 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'kraviona-mcp', transport: 'streamable-http' });
+  res.status(200).json({ status: 'ok', ok: true, service: 'kraviona-mcp', transport: 'streamable-http' });
 });
 
 app.post('/mcp', requireMcpAuth, async (req, res) => {
@@ -123,6 +138,8 @@ const listener = app.listen(port, host, error => {
   if (error) throw error;
   console.log(`Kraviona MCP listening on ${host}:${port} (${resourceUrl.href})`);
 });
+listener.keepAliveTimeout = 65000;
+listener.headersTimeout = 66000;
 
 async function shutdown() {
   listener.close();
