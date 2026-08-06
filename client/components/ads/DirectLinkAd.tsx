@@ -6,6 +6,7 @@ interface DirectLinkAdProps {
   buttonText?: string;
   className?: string;
   variant?: 'card' | 'banner' | 'button' | 'sidebar';
+  targetUrl?: string;
 }
 
 export default function DirectLinkAd({
@@ -14,8 +15,9 @@ export default function DirectLinkAd({
   buttonText = 'Explore Offer ↗',
   className = '',
   variant = 'card',
+  targetUrl,
 }: DirectLinkAdProps) {
-  const adUrl = 'https://www.effectivecpmnetwork.com/rpn69gan?key=2b06f18d099a81d3a10cf358d860c9a5';
+  const adUrl = targetUrl || 'https://www.effectivecpmnetwork.com/rpn69gan?key=2b06f18d099a81d3a10cf358d860c9a5';
 
   if (variant === 'button') {
     return (
