@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import slugify from 'slugify';
 import { z } from 'zod';
 import { Post, Category, Comment, User, Subscriber, KeywordQueue, SiteSettings, Service, Inquiry } from '../models/index.js';
-import { auth, admin, commentLimiter, inquiryLimiter } from '../middleware/index.js';
+import { auth, admin } from '../middleware/index.js';
 import { generatePost } from '../services/aiAgent.js';
 import { requestSubscription, confirmSubscription } from '../services/newsletter.js';
 import { uploadImage } from '../services/cloudinary.js';
@@ -77,13 +77,13 @@ r.post('/services',auth,admin,wrap(async(req,res)=>res.status(201).json(await Se
 r.put('/services/:id',auth,admin,wrap(async(req,res)=>{const service=await Service.findById(req.params.id);if(!service)return res.status(404).json({error:'Service not found'});service.set(normalizeService(req.body,service));await service.save();res.json(service);}));
 r.delete('/services/:id',auth,admin,wrap(async(req,res)=>{if(await Inquiry.exists({service:req.params.id}))return res.status(409).json({error:'This service has enquiries. Set it to draft instead of deleting it.'});await Service.findByIdAndDelete(req.params.id);res.status(204).end();}));
 
-r.post('/inquiries',inquiryLimiter,wrap(async(req,res)=>{const parsed=inquiryInput.safeParse(req.body);if(!parsed.success)return res.status(400).json({error:parsed.error.issues[0]?.message||'Please check your details'});const {website,...payload}=parsed.data;if(website)return res.status(202).json({message:'Thank you. We will contact you shortly.'});if(payload.service&&!mongoose.Types.ObjectId.isValid(payload.service))delete payload.service;const inquiry=await Inquiry.create({...payload,source:req.get('origin')||'kraviona-site'});res.status(201).json({id:inquiry.id,message:'Thanks—your project brief is with the Kraviona team. Expect a reply within one business day.'});}));
+r.post('/inquiries',wrap(async(req,res)=>{const parsed=inquiryInput.safeParse(req.body);if(!parsed.success)return res.status(400).json({error:parsed.error.issues[0]?.message||'Please check your details'});const {website,...payload}=parsed.data;if(website)return res.status(202).json({message:'Thank you. We will contact you shortly.'});if(payload.service&&!mongoose.Types.ObjectId.isValid(payload.service))delete payload.service;const inquiry=await Inquiry.create({...payload,source:req.get('origin')||'kraviona-site'});res.status(201).json({id:inquiry.id,message:'Thanks—your project brief is with the Kraviona team. Expect a reply within one business day.'});}));
 r.get('/inquiries',auth,admin,wrap(async(req,res)=>{const query=req.query.status&&req.query.status!=='all'?{status:req.query.status}:{};res.json(await Inquiry.find(query).populate('service','title slug').sort({createdAt:-1}));}));
 r.patch('/inquiries/:id',auth,admin,wrap(async(req,res)=>{const allowed={};if(['new','contacted','qualified','closed','spam'].includes(req.body.status))allowed.status=req.body.status;if(typeof req.body.notes==='string')allowed.notes=req.body.notes;const item=await Inquiry.findByIdAndUpdate(req.params.id,allowed,{new:true,runValidators:true}).populate('service','title slug');if(!item)return res.status(404).json({error:'Enquiry not found'});res.json(item);}));
 r.delete('/inquiries/:id',auth,admin,wrap(async(req,res)=>{await Inquiry.findByIdAndDelete(req.params.id);res.status(204).end();}));
 
 r.get('/comments',wrap(async(req,res)=>{if(!req.query.post)requireAdminQuery(req);res.json(await Comment.find(req.query.post?{post:req.query.post,status:'approved'}:{status:req.query.status||'pending'}).populate('user','name email').populate('post','title slug').sort({createdAt:-1}));}));
-r.post('/comments',auth,commentLimiter,wrap(async(req,res)=>res.status(201).json(await Comment.create({...req.body,user:req.user.id,status:'pending'}))));
+r.post('/comments',auth,wrap(async(req,res)=>res.status(201).json(await Comment.create({...req.body,user:req.user.id,status:'pending'}))));
 r.patch('/comments/:id',auth,admin,wrap(async(req,res)=>res.json(await Comment.findByIdAndUpdate(req.params.id,{status:req.body.status},{new:true}))));
 r.delete('/comments/:id',auth,admin,wrap(async(req,res)=>{await Comment.findByIdAndDelete(req.params.id);res.status(204).end();}));
 

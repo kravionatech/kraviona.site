@@ -39,7 +39,7 @@ Categories are dynamic. Create or edit them under **Categories**; public navigat
 6. Open **Client enquiries** to view the brief, email/phone, selected service and budget.
 7. Move each enquiry through `new`, `contacted`, `qualified` and `closed`; use notes for private follow-up context.
 
-The public form is validated, rate-limited and protected with a honeypot field. Enquiries are stored in MongoDB and are never exposed by a public read endpoint.
+The public form is validated and protected with a honeypot field. Enquiries are stored in MongoDB and are never exposed by a public read endpoint.
 
 ## Update company and contact information
 
