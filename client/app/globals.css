@@ -23,3 +23,126 @@ body{background:var(--paper)}.site-header{background:rgba(244,247,246,.95);borde
 .site-footer{background:#17383d;color:#c8d5d3;border:0}.footer-top{grid-template-columns:1.15fr .55fr 1fr;gap:75px;padding:58px 0 50px}.footer-pitch h2{display:none}.footer-pitch p{color:#94aaa7;max-width:440px;margin:22px 0 18px}.official-badge{margin-top:0;border-color:#466368;background:rgba(255,255,255,.025)}.footer-label{color:#809895;margin-bottom:17px}.footer-nav{gap:7px}.footer-company{border-left:1px solid #3a585d;padding-left:38px}.footer-company h3{font:500 1.75rem/1.08 var(--serif);color:#fff;margin:0 0 12px;max-width:400px}.footer-company>p{color:#8fa5a2;font-size:.78rem}.footer-company__links{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:22px}.footer-company__links a{font-size:.7rem;border-bottom:1px solid #6a8380;padding-bottom:3px}.footer-company__links a:first-child{color:#ff9a7c;font-weight:700}.footer-bottom{padding:18px 0 22px;border-color:#3a585d;color:#79918e}.footer-bottom span:nth-child(2){text-align:center}
 @media(max-width:980px){.newsletter-band__inner{grid-template-columns:1fr;gap:45px}.newsletter-card{max-width:620px}.footer-top{grid-template-columns:1fr 1fr}.footer-pitch{grid-column:1/-1}.footer-company{border-left:0;padding-left:0}}
 @media(max-width:760px){.newsletter-band{padding:62px 0}.newsletter-band h2{font-size:3.5rem}.newsletter-card{padding:25px 20px;box-shadow:7px 7px 0 #cbdad8}.newsletter-card .newsletter-form form{display:block;border:0}.newsletter-card .newsletter-form input{border:1px solid var(--line)}.newsletter-card .newsletter-form button{margin-top:8px}.footer-top{display:grid;grid-template-columns:1fr;gap:36px;padding:48px 0}.footer-pitch{grid-column:auto}.footer-top>*+*{margin-top:0}.footer-company{padding-top:28px;border-top:1px solid #3a585d}.footer-bottom span:nth-child(2){text-align:left}}
+
+/* Ad Unit Styles */
+.ad-unit {
+  margin: 32px 0;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ad-unit__label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.ad-unit--leaderboard {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ad-unit__container--728x90 {
+  width: 100%;
+  max-width: 728px;
+  min-height: 90px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.ad-unit--container {
+  min-height: 120px;
+}
+
+.ad-unit--direct-card {
+  text-align: left;
+  border-left: 4px solid var(--orange);
+  background: var(--paper);
+}
+
+.ad-direct-card__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.ad-direct-card__info h3 {
+  font-size: 1.25rem;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+
+.ad-direct-card__info p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.ad-direct-card__cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  background: var(--orange);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.ad-direct-card__cta:hover {
+  background: var(--navy);
+  transform: translateY(-2px);
+}
+
+.ad-direct-sidebar {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--orange);
+  margin-bottom: 22px;
+}
+
+.ad-direct-sidebar h4 {
+  font-size: 1.1rem;
+  margin: 8px 0;
+}
+
+.ad-direct-sidebar p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.ad-direct-sidebar__link {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--orange);
+  border-bottom: 1px solid currentColor;
+}
+
+@media (max-width: 760px) {
+  .ad-direct-card__body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ad-direct-card__cta {
+    width: 100%;
+    justify-content: center;
+  }
+}

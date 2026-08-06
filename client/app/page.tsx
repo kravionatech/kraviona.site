@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { api } from '../lib/api';
 import PostCard from '../components/PostCard';
 import NewsletterForm from '../components/NewsletterForm';
+import { LeaderboardAd, DirectLinkAd } from '../components/ads';
 import { absoluteUrl, DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_URL } from '../lib/site';
 
 const homeTitle='Kraviona — Clear ideas for better work';
@@ -21,9 +22,19 @@ export default async function Home() {
   return <>
     <section className="home-hero wrap"><div className="home-hero__top"><div><div className="eyebrow">{settings.heroEyebrow||'Independent editorial · Est. 2026'}</div><h1>{settings.heroTitle||'Think clearly. Build what lasts.'}</h1><p className="lead">{settings.heroDescription||'Deeply researched ideas on technology, growth, and modern work—for people who prefer signal over noise.'}</p></div><aside className="home-hero__aside"><span>This week at {settings.brandName||'Kraviona'}</span><strong>One strong idea is worth a hundred shallow takes.</strong><p>Read deliberately. Apply what matters. Ignore the rest.</p><a className="text-link" href="/blog">Enter the journal →</a></aside></div></section>
     <div className="wrap topic-strip"><span>Explore topics</span>{categories.map(c=><a href={`/category/${c.slug}`} key={c._id}>{c.name} →</a>)}</div>
+    
+    <div className="wrap">
+      <LeaderboardAd />
+    </div>
+
     <section className="wrap" aria-labelledby="featured-title"><div className="section-heading"><div><div className="eyebrow">Editor’s selection</div><h2 id="featured-title">Worth your attention</h2></div><p>Original reporting, useful frameworks, and ideas designed to stay valuable beyond today’s feed.</p></div>
       {featured?<div className="feature-layout"><PostCard post={featured} featured index={1}/><div className="feature-stack">{side.map((p,i)=><PostCard post={p} index={i+2} key={p._id}/>)}</div></div>:<div className="empty-state"><h2>Our first stories are on the way.</h2><p>Join the briefing to hear when they arrive.</p></div>}
     </section>
+
+    <div className="wrap">
+      <DirectLinkAd title="Explore Special Deals & Tech Recommendations" description="Check out curated options and tools carefully selected by our network partners." buttonText="View Highlights ↗" />
+    </div>
+
     {more.length>0&&<section className="wrap" aria-labelledby="latest-title"><div className="section-heading"><div><div className="eyebrow">Latest stories</div><h2 id="latest-title">Keep exploring</h2></div><a className="text-link" href="/blog">See the full journal →</a></div><div className="story-grid">{more.map((p,i)=><PostCard post={p} index={i+4} key={p._id}/>)}</div></section>}
     {services.length>0&&<section className="home-services"><div className="wrap"><div className="section-heading section-heading--light"><div><div className="eyebrow">Work with Kraviona</div><h2>Ideas are useful. Execution creates value.</h2></div><p>{settings.servicesDescription||'Product engineering, technical SEO and AI systems for teams ready to move.'}</p></div><div className="home-service-grid">{services.filter(service=>service.featured).slice(0,3).map((service,index)=><a href="/services#contact" className="home-service" key={service._id}><span>0{index+1} · {service.eyebrow}</span><h3>{service.title}</h3><p>{service.summary}</p><b>Discuss this service →</b></a>)}</div><div className="home-services__footer"><span>Commercial services are delivered by Kraviona Tech Solutions.</span><div><a href="/services">See all services →</a><a href={absoluteUrl(settings.officialSiteUrl||SITE_URL)} target="_blank" rel="noopener noreferrer">Official kraviona.site ↗</a></div></div></div></section>}
     <section className="newsletter-band"><div className="wrap newsletter-band__inner"><div className="newsletter-band__copy"><div className="eyebrow">The weekly briefing</div><h2>{settings.briefingTitle||'Your inbox deserves better ideas.'}</h2><p>{settings.briefingDescription||'One original essay or practical framework every week. Thoughtful, concise, and worth keeping.'}</p><div className="briefing-points"><span>Original thinking</span><span>5-minute read</span><span>No inbox noise</span></div></div><div className="newsletter-card"><span className="newsletter-card__label">Join thoughtful builders and curious minds</span><NewsletterForm compact/><p>One useful note, delivered weekly. Leave whenever you want.</p></div></div></section>
