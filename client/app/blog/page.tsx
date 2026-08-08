@@ -4,6 +4,7 @@ import { api } from '../../lib/api';
 import PostCard from '../../components/PostCard';
 import { DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_URL } from '../../lib/site';
 import './blog-v2.css';
+import { DisplayAd } from '../../components/ads';
 
 type Query={page?:string;search?:string};
 function pageNumber(value?: string) { const page = Number(value); return Number.isSafeInteger(page) && page > 1 ? page : 1; }
@@ -23,5 +24,6 @@ export default async function Blog({ searchParams }: { searchParams: Promise<Que
       {data.pages>1&&<nav className="pagination" aria-label="Journal pages">{page>1&&<a rel="prev" href={page===2?'/blog':`/blog?page=${page-1}`}>← Previous</a>}<span>Page {page} of {data.pages}</span>{page<data.pages&&<a rel="next" href={`/blog?page=${page+1}`}>Next →</a>}</nav>}
     </section>
     {ld&&<script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(ld)}}/>}
+    <div className="wrap ad-slot--compact"><DisplayAd size="468x60" /></div>
   </>;
 }

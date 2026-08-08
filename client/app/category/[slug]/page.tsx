@@ -2,11 +2,41 @@ import { api } from '../../../lib/api';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_URL, truncate } from '../../../lib/site';
+import { DEFAULT_OG_IMAGE, jsonLd, plainText, SITE_DESCRIPTION, SITE_URL, truncate } from '../../../lib/site';
 import './category.css';
 
 async function getCategory(slug: string) { const cats = await api('/categories'); return cats.find((x: any) => x.slug === slug); }
-export async function generateMetadata({ params }: { params: Promise<{slug:string}> }): Promise<Metadata> { const {slug}=await params;try{const c=await getCategory(slug);if(!c)return{title:'Category not found',robots:{index:false,follow:false}};const title=truncate(c.seo?.metaTitle||`${c.name} ideas and guides`,60);const description=truncate(c.seo?.metaDescription||c.description||SITE_DESCRIPTION,160);const canonical=`/category/${c.slug}`;const index=!c.seo?.isNoIndex;return{title,description,alternates:{canonical},openGraph:{type:'website',url:canonical,title,description,images:[{url:DEFAULT_OG_IMAGE,width:1200,height:630,alt:title}]},twitter:{card:'summary_large_image',title,description,images:[DEFAULT_OG_IMAGE]},robots:{index,follow:true,googleBot:{index,follow:true,'max-image-preview':'large','max-snippet':-1,'max-video-preview':-1}}}}catch{return{robots:{index:false,follow:false}}} }
+export async function generateMetadata({ params }: { params: Promise<{slug:string}> }): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const category = await getCategory(slug);
+    if (!category) return { title: 'Category not found', robots: { index: false, follow: false } };
+
+    // A category name alone is not a useful search result title or description.
+    // Preserve substantive editorial SEO copy from the CMS, otherwise use a precise fallback.
+    const suppliedTitle = plainText(category.seo?.metaTitle || '').trim();
+    const suppliedDescription = plainText(category.seo?.metaDescription || category.description || '').trim();
+    const title = truncate(suppliedTitle.length >= 30 ? suppliedTitle : `${category.name} ideas and guides`, 60);
+    const description = truncate(
+      suppliedDescription.length >= 50
+        ? suppliedDescription
+        : `Explore Kraviona guides, explainers, and practical perspectives on ${category.name.toLowerCase()}.`,
+      160
+    );
+    const canonical = `/category/${category.slug}`;
+    const index = !category.seo?.isNoIndex;
+    return {
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: { type: 'website', url: canonical, title, description, images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: title }] },
+      twitter: { card: 'summary_large_image', title, description, images: [DEFAULT_OG_IMAGE] },
+      robots: { index, follow: true, googleBot: { index, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } }
+    };
+  } catch {
+    return { robots: { index: false, follow: false } };
+  }
+}
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const slug = (await params).slug;

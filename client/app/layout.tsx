@@ -23,6 +23,8 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
       gtag('js', new Date());
       gtag('config', 'G-RW2R0MNJK5');
     `}</Script>
+    <Script src="https://pl30712675.effectivecpmnetwork.com/3c/dd/f0/3cddf0828907257998b47b67c7158afd.js" strategy="lazyOnload" />
+    <Script src="https://pl30712676.effectivecpmnetwork.com/b6/b6/1e/b6b61e3f833b7f4241d59ddef8fe7bb4.js" strategy="lazyOnload" />
     <ClientNavigation/><a className="skip-link" href="#main-content">Skip to content</a>
     <header className="site-header">
       <div className="utility-bar"><div className="wrap"><span>{tagline}</span><a href={official} target="_blank" rel="noopener noreferrer">Official Main Site: <b>kraviona.com ↗</b></a></div></div>

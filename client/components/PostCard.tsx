@@ -4,7 +4,7 @@ import { formatDate, plainText, readingTime } from '../lib/site';
 export default function PostCard({ post, featured = false, index }: { post: any; featured?: boolean; index?: number }) { const words=post.wordCount||plainText(post.content||'').split(/\s+/).filter(Boolean).length;
   return <article className={`story-card${featured ? ' story-card--featured' : ''}`}>
     <a className="story-card__image" href={`/blog/${post.slug}`}>
-      {post.featuredImage?.url ? <Image src={post.featuredImage.url} alt={post.featuredImage.alt || ''} fill sizes={featured ? '(max-width: 800px) 100vw, 60vw' : '(max-width: 800px) 100vw, 33vw'} priority={featured}/> : <span className="image-placeholder" aria-hidden="true"/>}
+      {post.featuredImage?.url ? <Image src={post.featuredImage.url} alt={post.featuredImage.alt || post.title} fill sizes={featured ? '(max-width: 800px) 100vw, 60vw' : '(max-width: 800px) 100vw, 33vw'} priority={featured}/> : <span className="image-placeholder" aria-hidden="true"/>}
       {typeof index === 'number' && <span className="story-index">{String(index).padStart(2, '0')}</span>}
     </a>
     <div className="story-card__content">
