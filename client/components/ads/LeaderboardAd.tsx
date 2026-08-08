@@ -21,6 +21,7 @@ export default function LeaderboardAd({ className = '' }: LeaderboardAdProps) {
     iframe.style.border = 'none';
     iframe.style.overflow = 'hidden';
     iframe.scrolling = 'no';
+    iframe.sandbox.add('allow-scripts', 'allow-popups');
 
     containerRef.current.appendChild(iframe);
 

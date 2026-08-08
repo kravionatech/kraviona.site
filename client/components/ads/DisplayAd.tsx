@@ -25,6 +25,8 @@ export default function DisplayAd({ size, className = '' }: DisplayAdProps) {
     host.replaceChildren();
     const iframe = document.createElement('iframe');
     iframe.title = 'Advertisement'; iframe.loading = 'lazy'; iframe.scrolling = 'no';
+    // Provider code must never navigate or attach handlers to the host page.
+    iframe.sandbox.add('allow-scripts', 'allow-popups');
     iframe.style.cssText = `display:block;width:${unit.width}px;max-width:100%;height:${unit.height}px;border:0;overflow:hidden;background:transparent;`;
     host.appendChild(iframe);
     const doc = iframe.contentDocument;
