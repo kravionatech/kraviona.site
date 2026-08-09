@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { DEFAULT_OG_IMAGE, jsonLd, plainText, SITE_DESCRIPTION, SITE_URL, truncate } from '../../../lib/site';
+import { DisplayAd } from '../../../components/ads';
 import './category.css';
 
 async function getCategory(slug: string) { const cats = await api('/categories'); return cats.find((x: any) => x.slug === slug); }
@@ -49,6 +50,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const canonical=`${SITE_URL}/category/${slug}`;
   const ld=[{'@context':'https://schema.org','@type':'CollectionPage','@id':canonical,name:category.name,description:category.description,url:canonical,isPartOf:{'@id':`${SITE_URL}/#website`},mainEntity:{'@type':'ItemList',numberOfItems:data.items.length,itemListElement:data.items.map((p:any,i:number)=>({'@type':'ListItem',position:i+1,name:p.title,url:`${SITE_URL}/blog/${p.slug}`}))}},{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:SITE_URL},{'@type':'ListItem',position:2,name:'Journal',item:`${SITE_URL}/blog`},{'@type':'ListItem',position:3,name:category.name,item:canonical}]}];
   return <>
+    <div className="wrap ad-slot--compact"><DisplayAd size="300x250" /></div>
     <section className={`category-cover tone-${slug}`}>
       <div className="cover-orb"/><div className="wrap cover-content">
         <div className="cover-kicker"><a href="/blog">Journal</a><span>/</span><span>{category.name}</span></div>

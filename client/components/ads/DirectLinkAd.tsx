@@ -32,10 +32,6 @@ export default function DirectLinkAd({
     );
   }
 
-  if (variant === 'sidebar') {
-    return null;
-  }
-
   return (
     <div className={`ad-unit ad-unit--direct-card ad-unit--variant-${variant} ${className}`}>
       <div className="ad-unit__label">Sponsored Link</div>
