@@ -1,46 +1,403 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
+import TiptapEditor from "../components/TiptapEditor";
 
-const API = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:4000/api' : 'https://api.kraviona.site/api')).replace(/\/$/, '');
-const SITE_URL = (process.env.NEXT_PUBLIC_CLIENT_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://kraviona.site')).replace(/\/$/, '');
-const emptyForm = { title: '', category: '', content: '', excerpt: '' };
-type Notice = { type: 'success' | 'error' | 'info'; text: string } | null;
+const API = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:4000/api"
+    : "https://api.kraviona.site/api")
+).replace(/\/$/, "");
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_CLIENT_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://kraviona.site")
+).replace(/\/$/, "");
+const emptyForm = { title: "", category: "", content: "", excerpt: "" };
+type Notice = { type: "success" | "error" | "info"; text: string } | null;
 
 async function call(path: string, options: RequestInit = {}) {
   let response: Response;
-  try { response = await fetch(`${API}${path}`, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json', ...options.headers } }); }
-  catch { throw new Error('Unable to reach the publishing service. Check your connection and try again.'); }
-  const data = response.status === 204 ? null : await response.json().catch(() => null);
-  if (!response.ok) throw new Error(data?.error || `The request could not be completed (${response.status}). Please try again.`);
+  try {
+    response = await fetch(`${API}${path}`, {
+      ...options,
+      credentials: "include",
+      headers: { "Content-Type": "application/json", ...options.headers },
+    });
+  } catch {
+    throw new Error(
+      "Unable to reach the publishing service. Check your connection and try again.",
+    );
+  }
+  const data =
+    response.status === 204 ? null : await response.json().catch(() => null);
+  if (!response.ok)
+    throw new Error(
+      data?.error ||
+        `The request could not be completed (${response.status}). Please try again.`,
+    );
   return data;
 }
 
-function wordCount(html: string) { return String(html || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length; }
-function countExternalLinks(html: string) { return [...String(html || '').matchAll(/<a\b[^>]*\bhref=["']((?:https?:)?\/\/[^"']+)["']/gi)].map(match => match[1]).filter(url => { try { return !new URL(url, SITE_URL).hostname.endsWith('kraviona.site'); } catch { return false; } }).length; }
+function wordCount(html: string) {
+  return String(html || "")
+    .replace(/<[^>]+>/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+function countExternalLinks(html: string) {
+  return [
+    ...String(html || "").matchAll(
+      /<a\b[^>]*\bhref=["']((?:https?:)?\/\/[^"']+)["']/gi,
+    ),
+  ]
+    .map((match) => match[1])
+    .filter((url) => {
+      try {
+        return !new URL(url, SITE_URL).hostname.endsWith("kraviona.site");
+      } catch {
+        return false;
+      }
+    }).length;
+}
 
 export default function Editor() {
-  const [me, setMe] = useState<any>(), [posts, setPosts] = useState<any[]>([]), [cats, setCats] = useState<any[]>([]);
-  const [notice, setNotice] = useState<Notice>(null), [form, setForm] = useState(emptyForm), [login, setLogin] = useState(false), [loading, setLoading] = useState(true), [saving, setSaving] = useState(false);
-  const editorRef = useRef<HTMLDivElement>(null);
-  const load = async () => { const current = await call('/auth/me'); if (current.user.role !== 'editor') throw new Error('This portal is available only to approved editor accounts.'); setMe(current.user); const [ownPosts, categories] = await Promise.all([call('/guest-posts?status=all'), call('/categories')]); setPosts(ownPosts); setCats(categories); };
-  useEffect(() => { load().catch(() => setLogin(true)).finally(() => setLoading(false)); }, []);
-  const updateContent = () => setForm(current => ({ ...current, content: editorRef.current?.innerHTML || '' }));
-  const execute = (command: string, value?: string) => { editorRef.current?.focus(); document.execCommand(command, false, value); updateContent(); };
-  const addLink = () => { const url = window.prompt('Paste a full HTTPS link'); if (!url) return; try { const link = new URL(url); if (!/^https?:$/.test(link.protocol)) throw new Error(); execute('createLink', link.href); } catch { setNotice({ type: 'error', text: 'Enter a valid http:// or https:// URL for the link.' }); } };
-  const publish = async (status: 'draft' | 'published') => {
-    const words = wordCount(form.content), links = countExternalLinks(form.content), limit = me?.backlinkLimit || 0;
-    if (!form.title.trim()) return setNotice({ type: 'error', text: 'Add an article title before saving.' });
-    if (status === 'published' && form.title.trim().length < 10) return setNotice({ type: 'error', text: 'Use a more descriptive title (at least 10 characters) before publishing.' });
-    if (status === 'published' && !form.category) return setNotice({ type: 'error', text: 'Choose a category so readers can discover this article.' });
-    if (status === 'published' && words < 300) return setNotice({ type: 'error', text: `Your article has ${words} words. Add ${300 - words} more words before publishing.` });
-    if (links > limit) return setNotice({ type: 'error', text: `This article has ${links} external links, while your approved allowance is ${limit}. Remove ${links - limit} link(s) or ask an administrator to update your allowance.` });
-    setSaving(true); setNotice(null);
-    try { const saved = await call('/guest-posts', { method: 'POST', body: JSON.stringify({ ...form, authorName: me.name, authorEmail: me.email, status }) }); setNotice({ type: 'success', text: status === 'published' ? 'Published successfully. Your article is now live on Kraviona.' : 'Draft saved. You can return to it from your article list.' }); setForm(emptyForm); if (editorRef.current) editorRef.current.innerHTML = ''; await load(); if (status === 'published' && saved.slug) window.open(`${SITE_URL}/blog/${saved.slug}`, '_blank', 'noopener,noreferrer'); }
-    catch (error: any) { setNotice({ type: 'error', text: error.message }); } finally { setSaving(false); }
+  const [me, setMe] = useState<any>(),
+    [posts, setPosts] = useState<any[]>([]),
+    [cats, setCats] = useState<any[]>([]);
+  const [notice, setNotice] = useState<Notice>(null),
+    [form, setForm] = useState(emptyForm),
+    [login, setLogin] = useState(false),
+    [loading, setLoading] = useState(true),
+    [saving, setSaving] = useState(false);
+  const load = async () => {
+    const current = await call("/auth/me");
+    if (current.user.role !== "editor")
+      throw new Error(
+        "This portal is available only to approved editor accounts.",
+      );
+    setMe(current.user);
+    const [ownPosts, categories] = await Promise.all([
+      call("/guest-posts?status=all"),
+      call("/categories"),
+    ]);
+    setPosts(ownPosts);
+    setCats(categories);
   };
-  const words = useMemo(() => wordCount(form.content), [form.content]), links = useMemo(() => countExternalLinks(form.content), [form.content]), limit = me?.backlinkLimit || 0;
-  if (loading) return <main className="shell"><p className="muted">Loading your workspace…</p></main>;
-  if (login) return <main className="shell login"><div className="brand">kraviona<span>.</span> editor</div><div className="panel"><p className="eyebrow">Secure publishing workspace</p><h1>Editor sign in</h1><p className="muted">Sign in with your approved editor account to create and publish articles.</p><form onSubmit={async event => { event.preventDefault(); setNotice(null); try { await call('/auth/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) }); await load(); setLogin(false); } catch (error: any) { setNotice({ type: 'error', text: error.message }); } }}><label>Email<input name="email" type="email" autoComplete="email" required/></label><label>Password<input name="password" type="password" autoComplete="current-password" required/></label><button>Sign in</button></form>{notice && <p className={`notice ${notice.type}`} role="alert">{notice.text}</p>}<p className="muted">Need access? <a href="https://kraviona.site/guest-posting">Request an editor account</a>.</p></div></main>;
-  return <main className="shell"><header className="top"><div><div className="brand">kraviona<span>.</span> editor</div><p className="eyebrow">Publishing workspace</p><h1>Write with confidence.</h1><p className="muted">Articles publish directly to the public journal—there is no review queue.</p></div><button className="ghost" onClick={async () => { await call('/auth/logout', { method: 'POST' }); setLogin(true); }}>Sign out</button></header>{notice && <div className={`notice ${notice.type}`} role="status">{notice.text}</div>}<div className="workspace"><section className="panel composer"><div className="section-head"><div><h2>New article</h2><p className="muted">Use the rich-text tools to structure an easy-to-read article.</p></div><span className="save-state">{saving ? 'Publishing…' : 'Ready'}</span></div><label>Article title<input value={form.title} maxLength={120} onChange={event => setForm({ ...form, title: event.target.value })} placeholder="A clear, useful article title"/></label><div className="two-cols"><label>Category<select value={form.category} onChange={event => setForm({ ...form, category: event.target.value })}><option value="">Choose a category</option>{cats.map(category => <option key={category._id} value={category._id}>{category.name}</option>)}</select></label><label>Reader summary <small>{form.excerpt.length}/300</small><input value={form.excerpt} maxLength={300} onChange={event => setForm({ ...form, excerpt: event.target.value })} placeholder="What will readers learn?"/></label></div><div className="rich-editor"><div className="toolbar" aria-label="Rich text formatting"><button type="button" title="Bold" onClick={() => execute('bold')}><b>B</b></button><button type="button" title="Italic" onClick={() => execute('italic')}><i>I</i></button><button type="button" title="Heading" onClick={() => execute('formatBlock', '<h2>')}>H2</button><button type="button" title="Quote" onClick={() => execute('formatBlock', '<blockquote>')}>❝</button><button type="button" title="Bulleted list" onClick={() => execute('insertUnorderedList')}>• List</button><button type="button" title="Numbered list" onClick={() => execute('insertOrderedList')}>1. List</button><button type="button" title="Add link" onClick={addLink}>↗ Link</button><button type="button" title="Remove formatting" onClick={() => execute('removeFormat')}>Clear</button></div><div className="canvas" ref={editorRef} contentEditable role="textbox" aria-multiline="true" data-placeholder="Start writing your article here…" suppressContentEditableWarning onInput={updateContent}/></div><div className="metrics"><span>{words} / 300 words minimum</span><span className={links > limit ? 'danger-text' : ''}>{links} / {limit} external links</span></div><div className="publish-actions"><button className="ghost" disabled={saving} onClick={() => publish('draft')}>Save draft</button><button disabled={saving} onClick={() => publish('published')}>{saving ? 'Publishing…' : 'Publish now'}</button></div></section><aside className="sidebar"><section className="panel"><p className="eyebrow">Your publishing access</p><h2>{limit} external link{limit === 1 ? '' : 's'}</h2><p className="muted">Your current per-article allowance. Internal Kraviona links do not count.</p></section><section className="panel guide"><h3>Publication checks</h3><ul><li>Use a meaningful title and category.</li><li>Write at least 300 words.</li><li>Keep links helpful and within your allowance.</li><li>Publishing makes the article public immediately.</li></ul></section></aside></div><section className="panel articles"><div className="section-head"><div><h2>My articles</h2><p className="muted">Your saved drafts and published work.</p></div><span>{posts.length} total</span></div>{posts.length ? posts.map(post => <div className="row" key={post._id}><div><b>{post.title}</b><span className="muted">{post.category?.name || 'Uncategorised'} · {post.backlinkCount || 0} external links · {new Date(post.createdAt).toLocaleDateString()}</span></div><div className="row-right"><span className={`status ${post.status}`}>{post.status}</span>{post.status === 'published' && <a target="_blank" rel="noreferrer" href={`${SITE_URL}/blog/${post.slug}`}>View live ↗</a>}</div></div>) : <p className="muted">No articles yet. Your first published article will appear here.</p>}</section></main>;
+  useEffect(() => {
+    load()
+      .catch(() => setLogin(true))
+      .finally(() => setLoading(false));
+  }, []);
+  const publish = async (status: "draft" | "published") => {
+    const words = wordCount(form.content),
+      links = countExternalLinks(form.content),
+      limit = me?.backlinkLimit || 0;
+    if (!form.title.trim())
+      return setNotice({
+        type: "error",
+        text: "Add an article title before saving.",
+      });
+    if (status === "published" && form.title.trim().length < 10)
+      return setNotice({
+        type: "error",
+        text: "Use a more descriptive title (at least 10 characters) before publishing.",
+      });
+    if (status === "published" && !form.category)
+      return setNotice({
+        type: "error",
+        text: "Choose a category so readers can discover this article.",
+      });
+    if (status === "published" && words < 300)
+      return setNotice({
+        type: "error",
+        text: `Your article has ${words} words. Add ${300 - words} more words before publishing.`,
+      });
+    if (words > 2500)
+      return setNotice({
+        type: "error",
+        text: `Your article has ${words} words. The editor limit is 2,500 words; shorten it by ${words - 2500} words.`,
+      });
+    if (links > limit)
+      return setNotice({
+        type: "error",
+        text: `This article has ${links} external links, while your approved allowance is ${limit}. Remove ${links - limit} link(s) or ask an administrator to update your allowance.`,
+      });
+    setSaving(true);
+    setNotice(null);
+    try {
+      const saved = await call("/guest-posts", {
+        method: "POST",
+        body: JSON.stringify({
+          ...form,
+          authorName: me.name,
+          authorEmail: me.email,
+          status,
+        }),
+      });
+      setNotice({
+        type: "success",
+        text:
+          status === "published"
+            ? "Published successfully. Your article is now live on Kraviona."
+            : "Draft saved. You can return to it from your article list.",
+      });
+      setForm(emptyForm);
+      await load();
+      if (status === "published" && saved.slug)
+        window.open(
+          `${SITE_URL}/blog/${saved.slug}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
+    } catch (error: any) {
+      setNotice({ type: "error", text: error.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+  const words = useMemo(() => wordCount(form.content), [form.content]),
+    links = useMemo(() => countExternalLinks(form.content), [form.content]),
+    limit = me?.backlinkLimit || 0;
+  if (loading)
+    return (
+      <main className="shell">
+        <p className="muted">Loading your workspace…</p>
+      </main>
+    );
+  if (login)
+    return (
+      <main className="shell login">
+        <div className="brand">
+          kraviona<span>.</span> editor
+        </div>
+        <div className="panel">
+          <p className="eyebrow">Secure publishing workspace</p>
+          <h1>Editor sign in</h1>
+          <p className="muted">
+            Sign in with your approved editor account to create and publish
+            articles.
+          </p>
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setNotice(null);
+              try {
+                await call("/auth/login", {
+                  method: "POST",
+                  body: JSON.stringify(
+                    Object.fromEntries(new FormData(event.currentTarget)),
+                  ),
+                });
+                await load();
+                setLogin(false);
+              } catch (error: any) {
+                setNotice({ type: "error", text: error.message });
+              }
+            }}
+          >
+            <label>
+              Email
+              <input name="email" type="email" autoComplete="email" required />
+            </label>
+            <label>
+              Password
+              <input
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <button>Sign in</button>
+          </form>
+          {notice && (
+            <p className={`notice ${notice.type}`} role="alert">
+              {notice.text}
+            </p>
+          )}
+          <p className="muted">
+            Need access?{" "}
+            <a href="https://kraviona.site/guest-posting">
+              Request an editor account
+            </a>
+            .
+          </p>
+        </div>
+      </main>
+    );
+  return (
+    <main className="shell">
+      <header className="top">
+        <div>
+          <div className="brand">
+            kraviona<span>.</span> editor
+          </div>
+          <p className="eyebrow">Publishing workspace</p>
+          <h1>Write with confidence.</h1>
+          <p className="muted">
+            Articles publish directly to the public journal—there is no review
+            queue.
+          </p>
+        </div>
+        <button
+          className="ghost"
+          onClick={async () => {
+            await call("/auth/logout", { method: "POST" });
+            setLogin(true);
+          }}
+        >
+          Sign out
+        </button>
+      </header>
+      {notice && (
+        <div className={`notice ${notice.type}`} role="status">
+          {notice.text}
+        </div>
+      )}
+      <div className="workspace">
+        <section className="panel composer">
+          <div className="section-head">
+            <div>
+              <h2>New article</h2>
+              <p className="muted">
+                Use the rich-text tools to structure an easy-to-read article.
+              </p>
+            </div>
+            <span className="save-state">
+              {saving ? "Publishing…" : "Ready"}
+            </span>
+          </div>
+          <label>
+            Article title
+            <input
+              value={form.title}
+              maxLength={120}
+              onChange={(event) =>
+                setForm({ ...form, title: event.target.value })
+              }
+              placeholder="A clear, useful article title"
+            />
+          </label>
+          <div className="two-cols">
+            <label>
+              Category
+              <select
+                value={form.category}
+                onChange={(event) =>
+                  setForm({ ...form, category: event.target.value })
+                }
+              >
+                <option value="">Choose a category</option>
+                {cats.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Reader summary <small>{form.excerpt.length}/300</small>
+              <input
+                value={form.excerpt}
+                maxLength={300}
+                onChange={(event) =>
+                  setForm({ ...form, excerpt: event.target.value })
+                }
+                placeholder="What will readers learn?"
+              />
+            </label>
+          </div>
+          <TiptapEditor
+            content={form.content}
+            onChange={(content) =>
+              setForm((current) => ({ ...current, content }))
+            }
+            maxWords={2500}
+          />
+          <div className="metrics">
+            <span>{words} / 300 words minimum</span>
+            <span className={links > limit ? "danger-text" : ""}>
+              {links} / {limit} external links
+            </span>
+          </div>
+          <div className="publish-actions">
+            <button
+              className="ghost"
+              disabled={saving}
+              onClick={() => publish("draft")}
+            >
+              Save draft
+            </button>
+            <button disabled={saving} onClick={() => publish("published")}>
+              {saving ? "Publishing…" : "Publish now"}
+            </button>
+          </div>
+        </section>
+        <aside className="sidebar">
+          <section className="panel">
+            <p className="eyebrow">Your publishing access</p>
+            <h2>
+              {limit} external link{limit === 1 ? "" : "s"}
+            </h2>
+            <p className="muted">
+              Your current per-article allowance. Internal Kraviona links do not
+              count.
+            </p>
+          </section>
+          <section className="panel guide">
+            <h3>Publication checks</h3>
+            <ul>
+              <li>Use a meaningful title and category.</li>
+              <li>Write at least 300 words.</li>
+              <li>Keep links helpful and within your allowance.</li>
+              <li>Publishing makes the article public immediately.</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+      <section className="panel articles">
+        <div className="section-head">
+          <div>
+            <h2>My articles</h2>
+            <p className="muted">Your saved drafts and published work.</p>
+          </div>
+          <span>{posts.length} total</span>
+        </div>
+        {posts.length ? (
+          posts.map((post) => (
+            <div className="row" key={post._id}>
+              <div>
+                <b>{post.title}</b>
+                <span className="muted">
+                  {post.category?.name || "Uncategorised"} ·{" "}
+                  {post.backlinkCount || 0} external links ·{" "}
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="row-right">
+                <span className={`status ${post.status}`}>{post.status}</span>
+                {post.status === "published" && (
+                  <a
+                    target="_blank"
+                    rel="noreferrer"
+                    href={`${SITE_URL}/blog/${post.slug}`}
+                  >
+                    View live ↗
+                  </a>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="muted">
+            No articles yet. Your first published article will appear here.
+          </p>
+        )}
+      </section>
+    </main>
+  );
 }

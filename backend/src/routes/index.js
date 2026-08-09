@@ -84,6 +84,7 @@ const sanitizeGuestContent = content => String(content || '')
 const guestPostPayload = async (body, user) => {
   const parsed = guestPostInput.parse({ ...body, content: sanitizeGuestContent(body.content) });
   const wordCount = parsed.content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  if (wordCount > 2500) throw Object.assign(new Error(`This article has ${wordCount} words. The editor limit is 2,500 words.`), { status: 400 });
   if (parsed.status === 'published' && parsed.title.length < 10) throw Object.assign(new Error('Add a clearer title with at least 10 characters before publishing.'), { status: 400 });
   if (parsed.status === 'published' && wordCount < 300) throw Object.assign(new Error(`Your article has ${wordCount} words. Publish requires at least 300 words so readers receive a complete article.`), { status: 400 });
   const account = user.role === 'admin' ? { editorStatus: 'active', backlinkLimit: 50 } : await User.findById(user.id).select('editorStatus backlinkLimit');
@@ -121,7 +122,7 @@ r.delete('/categories/:id',auth,admin,wrap(async(req,res)=>{if(await Post.exists
 
 r.get('/settings',wrap(async(_,res)=>res.json(await SiteSettings.findOneAndUpdate({key:'primary'},{$setOnInsert:{key:'primary'}},{upsert:true,new:true,setDefaultsOnInsert:true}))));
 r.put('/settings',auth,admin,wrap(async(req,res)=>res.json(await SiteSettings.findOneAndUpdate({key:'primary'},req.body,{upsert:true,new:true,runValidators:true,setDefaultsOnInsert:true}))));
-r.post('/media/upload',auth,admin,wrap(async(req,res)=>res.status(201).json(await uploadImage(req.body.dataUri,req.body.folder))));
+r.post('/media/upload',auth,editor,wrap(async(req,res)=>res.status(201).json(await uploadImage(req.body.dataUri,req.body.folder))));
 
 r.get('/services',wrap(async(req,res)=>{const q={};if(req.query.status==='all')requireAdminQuery(req);else q.status='published';res.json(await Service.find(q).sort({order:1,title:1}));}));
 r.get('/services/:slug',wrap(async(req,res)=>{const query={slug:req.params.slug};if(req.query.preview==='true')requireAdminQuery(req);else query.status='published';const service=await Service.findOne(query);if(!service)return res.status(404).json({error:'Service not found'});res.json(service);}));
