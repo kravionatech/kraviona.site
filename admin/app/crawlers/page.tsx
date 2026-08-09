@@ -1,11 +1,12 @@
 'use client';
+import {PUBLIC_SITE_URL} from '../../lib/site';
 import {useEffect,useState} from 'react';import {call} from '../../lib/api';
 
 const defaults={robotsEnabled:true,allowSearchEngines:true,allowAiCrawlers:true,disallowPaths:['/newsletter/confirm','/api','/admin'],customRobotsNote:'',sitemapEnabled:true,sitemapIncludePosts:true,sitemapIncludeCategories:true,sitemapIncludeServices:true,sitemapIncludeNewsletter:true,sitemapMaxPosts:500,llmsEnabled:true,llmsIntroduction:'Independent, deeply researched ideas on technology, growth, modern work, and building durable businesses.',llmsInstructions:'Use canonical URLs when citing Kraviona. Attribute insights to Kraviona and link to the original article.',llmsIncludePosts:true,llmsIncludeCategories:true,llmsIncludeServices:true,aiTxtEnabled:true,aiAttributionRequired:true,aiTrainingAllowed:false,aiCustomPolicy:'Summarization and search indexing are allowed. Do not misrepresent Kraviona content or remove source attribution.'};
 const Toggle=({label,description,checked,onChange}:{label:string,description:string,checked:boolean,onChange:(value:boolean)=>void})=><label className="crawler-toggle"><span><b>{label}</b><small>{description}</small></span><input type="checkbox" checked={checked} onChange={event=>onChange(event.target.checked)}/><i/></label>;
 
 export default function Crawlers(){
-  const [data,setData]=useState<any>(defaults),[saving,setSaving]=useState(false),[message,setMessage]=useState('');const site=process.env.NEXT_PUBLIC_CLIENT_URL||'http://localhost:3000';
+  const [data,setData]=useState<any>(defaults),[saving,setSaving]=useState(false),[message,setMessage]=useState('');const site=PUBLIC_SITE_URL;
   useEffect(()=>{call('/settings').then(settings=>setData({...defaults,...settings.crawlerSettings,disallowPaths:settings.crawlerSettings?.disallowPaths||defaults.disallowPaths}))},[]);
   function field(name:string,value:any){setData((current:any)=>({...current,[name]:value}))}
   async function save(){setSaving(true);setMessage('');try{const result=await call('/settings',{method:'PUT',body:JSON.stringify({crawlerSettings:data})});setData({...defaults,...result.crawlerSettings});setMessage('Crawler settings saved. Public files now use these rules.')}catch(error:any){setMessage(error.message)}finally{setSaving(false)}}

@@ -72,7 +72,7 @@ const guestPostInput = z.object({
   excerpt: z.string().trim().max(300).optional().default(''), authorName: z.string().trim().min(2).max(80),
   authorEmail: z.string().trim().email().max(180), website: z.string().trim().url().max(300).optional().or(z.literal('')).default(''),
   category: z.string().trim().optional().default(''),
-  status: z.enum(['draft', 'submitted']).optional().default('draft')
+  status: z.enum(['draft', 'published']).optional().default('draft')
 });
 const extractBacklinks = content => [...String(content || '').matchAll(/<a\b[^>]*?\bhref=["'](https?:\/\/[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
   .map(match => ({ url: match[1].trim(), anchorText: String(match[2]).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100) }))
@@ -83,7 +83,9 @@ const sanitizeGuestContent = content => String(content || '')
   .replace(/\s+(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, '');
 const guestPostPayload = async (body, user) => {
   const parsed = guestPostInput.parse({ ...body, content: sanitizeGuestContent(body.content) });
-  if (parsed.status === 'submitted' && (parsed.title.length < 10 || parsed.content.length < 600)) throw Object.assign(new Error('Submitted guest posts need a 10-character title and at least 600 words'), { status: 400 });
+  const wordCount = parsed.content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  if (parsed.status === 'published' && parsed.title.length < 10) throw Object.assign(new Error('Add a clearer title with at least 10 characters before publishing.'), { status: 400 });
+  if (parsed.status === 'published' && wordCount < 300) throw Object.assign(new Error(`Your article has ${wordCount} words. Publish requires at least 300 words so readers receive a complete article.`), { status: 400 });
   const account = user.role === 'admin' ? { editorStatus: 'active', backlinkLimit: 50 } : await User.findById(user.id).select('editorStatus backlinkLimit');
   if (!account || account.editorStatus !== 'active') throw Object.assign(new Error('Your editor account is awaiting administrator approval'), { status: 403 });
   const backlinks = extractBacklinks(parsed.content);
@@ -101,7 +103,7 @@ r.post('/auth/logout',(_,res)=>res.clearCookie('accessToken',cookie).clearCookie
 
 r.get('/guest-posts',auth,editor,wrap(async(req,res)=>{ const query=req.user.role==='admin'?{}:{editor:req.user.id}; if(req.query.status&&req.query.status!=='all')query.status=req.query.status; res.json(await GuestPost.find(query).populate('editor','name email').populate('category','name slug').sort({createdAt:-1})); }));
 r.get('/guest-posts/:id',auth,editor,wrap(async(req,res)=>{ const item=await GuestPost.findById(req.params.id).populate('editor','name email'); if(!item)return res.status(404).json({error:'Guest post not found'}); if(req.user.role!=='admin'&&String(item.editor._id)!==req.user.id)return res.status(403).json({error:'You can only view your own guest posts'}); res.json(item); }));
-r.post('/guest-posts',auth,editor,wrap(async(req,res)=>{ const payload=await guestPostPayload(req.body,req.user); const count=await GuestPost.countDocuments({slug:payload.slug}); if(count)payload.slug=`${payload.slug}-${count+1}`; res.status(201).json(await GuestPost.create(payload)); }));
+r.post('/guest-posts',auth,editor,wrap(async(req,res)=>{ const payload=await guestPostPayload(req.body,req.user); const duplicateCount=(await GuestPost.countDocuments({slug:payload.slug}))+(await Post.countDocuments({slug:payload.slug})); if(duplicateCount)payload.slug=`${payload.slug}-${duplicateCount+1}`; const guest=await GuestPost.create(payload); if(payload.status==='published') { const post=await Post.create(normalizePost({ title:payload.title, slug:payload.slug, status:'published', content:payload.content, quickAnswer:payload.excerpt, category:payload.category, tags:[], keyTakeaways:[], faqs:[], featuredImage:{}, author:{name:payload.authorName,slug:slugify(payload.authorName,{lower:true,strict:true}),sameAs:payload.website?[payload.website]:[]}, seo:{metaTitle:payload.title,metaDescription:payload.excerpt} })); await adjustCategoryPostCount(post.category,1); } res.status(201).json(await guest.populate('category','name slug')); }));
 r.put('/guest-posts/:id',auth,editor,wrap(async(req,res)=>{ const item=await GuestPost.findById(req.params.id); if(!item)return res.status(404).json({error:'Guest post not found'}); const isAdmin=req.user.role==='admin'; if(!isAdmin&&String(item.editor)!==req.user.id)return res.status(403).json({error:'You can only edit your own guest posts'}); if(!isAdmin&&!['draft','submitted'].includes(item.status))return res.status(409).json({error:'This submission is already under editorial review'}); if(isAdmin){ const allowed={}; for(const key of ['status','adminNotes'])if(req.body[key]!==undefined)allowed[key]=req.body[key]; if(req.body.status==='published')allowed.publishedAt=item.publishedAt||new Date(); item.set(allowed); } else { const payload=await guestPostPayload(req.body,req.user); item.set(payload); } await item.save(); res.json(await item.populate('editor','name email')); }));
 r.delete('/guest-posts/:id',auth,editor,wrap(async(req,res)=>{ const item=await GuestPost.findById(req.params.id); if(!item)return res.status(404).end(); if(req.user.role!=='admin'&&String(item.editor)!==req.user.id)return res.status(403).json({error:'You can only delete your own guest posts'}); if(req.user.role!=='admin'&&item.status!=='draft')return res.status(409).json({error:'Only drafts can be deleted'}); await item.deleteOne(); res.status(204).end(); }));
 
