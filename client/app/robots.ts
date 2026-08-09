@@ -10,7 +10,7 @@ export default async function robots():Promise<MetadataRoute.Robots>{
   const enabled=crawler.robotsEnabled!==false;
   const searchAllowed=enabled&&crawler.allowSearchEngines!==false;
   const aiAllowed=enabled&&crawler.allowAiCrawlers!==false;
-  const disallow=(crawler.disallowPaths||['/newsletter/confirm','/api','/admin']).map((path:string)=>path.startsWith('/')?path:`/${path}`);
+  const disallow=[...new Set([...(crawler.disallowPaths||['/newsletter/confirm','/api','/admin']),'/ad'])].map((path:string)=>path.startsWith('/')?path:`/${path}`);
   return {
     rules:[
       {userAgent:'*',...(searchAllowed?{allow:'/',disallow}:{disallow:'/'})},

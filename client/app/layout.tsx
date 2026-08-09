@@ -5,6 +5,7 @@ import Script from 'next/script';
 import { api } from '../lib/api';
 import { absoluteUrl, DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '../lib/site';
 import ClientNavigation from '../components/ClientNavigation';
+import { DisplayAd, LeaderboardAd } from '../components/ads';
 
 const baseMetadata: Metadata = { metadataBase: new URL(SITE_URL), applicationName: SITE_NAME, authors: [{ name: 'Kraviona Editorial Team', url: SITE_URL }], creator: SITE_NAME, publisher: SITE_NAME, category: 'Technology news and analysis', alternates: { types: { 'application/rss+xml': `${SITE_URL}/feed.xml` } }, robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } }, verification: { google: process.env.GOOGLE_SITE_VERIFICATION || '-XV8p9zE9MYruAbDWo-gSDEYRFLrSB200khCkukUysg' }, icons: { icon: '/icon.svg', shortcut: '/icon.svg', apple: '/icon.svg' }, manifest: '/manifest.webmanifest', formatDetection: { email: false, address: false, telephone: false }, referrer: 'origin-when-cross-origin' };
 
@@ -41,6 +42,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <nav className="mobile-topics wrap" aria-label="Topics"><a href="/blog">All stories</a>{categories.map(category => <a href={`/category/${category.slug}`} key={category._id}>{category.name}</a>)}<a href="/services">Services</a></nav>
     </header>
     <main id="main-content">{children}</main>
+    <div className="wrap global-ad-slot global-ad-slot--desktop"><LeaderboardAd /></div>
+    <div className="wrap global-ad-slot global-ad-slot--mobile"><DisplayAd size="320x50" /></div>
     <footer className="site-footer"><div className="wrap footer-top"><div className="footer-pitch"><a className="brand brand--light" href="/">{brand.toLowerCase()}<span>.</span></a><p>{description}</p></div><div><span className="footer-label">Read</span><div className="footer-nav"><a href="/blog">All stories</a>{categories.slice(0, 3).map(category => <a href={`/category/${category.slug}`} key={category._id}>{category.name}</a>)}<a href="/feed.xml">RSS feed</a></div></div><div className="footer-company"><span className="footer-label">Build with Kraviona</span><h3>Need a faster product or stronger growth engine?</h3><p>Talk directly with the Kraviona team.</p><div className="footer-company__links"><a href="/services#contact">Start a project →</a><a href={`mailto:${email}`}>{email}</a></div></div></div><div className="wrap footer-bottom"><span>© {new Date().getFullYear()} {brand}</span><span>Independent reporting and practical technology analysis.</span><a href="/sitemap.xml">Sitemap</a></div></footer>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
   </body></html>;
