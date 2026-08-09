@@ -27,10 +27,12 @@ export default async function PostPage({params}:{params:Promise<{slug:string}>})
           {p.keyTakeaways?.length>0&&<div className="takeaway-box"><span>Key takeaways</span><ul>{p.keyTakeaways.map((x:string)=><li key={x}>{x}</li>)}</ul></div>}
           <DirectLinkAd variant="sidebar" title="Recommended Tool" description="Explore verified technical solutions and partner offers." buttonText="Discover Offer ↗" />
           <DisplayAd size="160x600" />
+          <DisplayAd size="160x300" />
         </aside>
         <div>
           <div className="article-body" dangerouslySetInnerHTML={{__html:p.content}}/>
           <DisplayAd size="300x250" className="article-inline-ad" />
+          <DisplayAd size="320x50" className="article-inline-ad ad-slot--mobile" />
         </div>
       </div>
       {p.faqs?.length>0&&<section className="faq-section" aria-labelledby="faq-heading"><div className="eyebrow">Common questions</div><h2 id="faq-heading">Frequently asked questions</h2>{p.faqs.map((f:any)=><div className="faq-item" key={f.question}><h3>{f.question}</h3><p>{f.answer}</p></div>)}</section>}

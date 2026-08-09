@@ -50,7 +50,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const canonical=`${SITE_URL}/category/${slug}`;
   const ld=[{'@context':'https://schema.org','@type':'CollectionPage','@id':canonical,name:category.name,description:category.description,url:canonical,isPartOf:{'@id':`${SITE_URL}/#website`},mainEntity:{'@type':'ItemList',numberOfItems:data.items.length,itemListElement:data.items.map((p:any,i:number)=>({'@type':'ListItem',position:i+1,name:p.title,url:`${SITE_URL}/blog/${p.slug}`}))}},{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:SITE_URL},{'@type':'ListItem',position:2,name:'Journal',item:`${SITE_URL}/blog`},{'@type':'ListItem',position:3,name:category.name,item:canonical}]}];
   return <>
-    <div className="wrap ad-slot--compact"><DisplayAd size="300x250" /></div>
     <section className={`category-cover tone-${slug}`}>
       <div className="cover-orb"/><div className="wrap cover-content">
         <div className="cover-kicker"><a href="/blog">Journal</a><span>/</span><span>{category.name}</span></div>
@@ -69,6 +68,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       </> : <div className="empty-state"><div className="eyebrow">Nothing published yet</div><h2>Our first {category.name} story is in progress.</h2><a className="btn" href="/blog">Browse all stories</a></div>}
       <section className="category-cta"><div><span className="eyebrow">Stay curious</span><h2>Ideas that respect your time.</h2></div><p>Get the strongest Kraviona story delivered once a week.</p><a className="btn" href="/newsletter">Join the briefing →</a></section>
     </div>
+    <div className="ad-slot--compact"><DisplayAd size="300x250" /></div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(ld)}}/>
   </>;
 }
