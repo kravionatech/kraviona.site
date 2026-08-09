@@ -20,7 +20,22 @@ PostSchema.pre('validate', function () {
 });
 
 const CategorySchema = new Schema({ name: { type: String, required: true }, slug: { type: String, unique: true, required: true }, description: String, postCount: { type: Number, default: 0, min: 0 }, seo }, { timestamps: true });
-const UserSchema = new Schema({ name: String, email: { type: String, unique: true, lowercase: true, required: true }, passwordHash: String, role: { type: String, enum: ['reader', 'admin'], default: 'reader' }, refreshTokenHash: String }, { timestamps: true });
+const UserSchema = new Schema({ name: String, email: { type: String, unique: true, lowercase: true, required: true }, passwordHash: String, role: { type: String, enum: ['reader', 'editor', 'admin'], default: 'reader' }, refreshTokenHash: String }, { timestamps: true });
+const GuestPostSchema = new Schema({
+  title: { type: String, required: true, trim: true, maxlength: 120 },
+  slug: { type: String, required: true, unique: true },
+  content: { type: String, required: true, maxlength: 50000 },
+  excerpt: { type: String, trim: true, maxlength: 300 },
+  authorName: { type: String, required: true, trim: true, maxlength: 80 },
+  authorEmail: { type: String, required: true, lowercase: true, trim: true },
+  website: { type: String, trim: true, maxlength: 300 },
+  backlinks: [{ url: { type: String, required: true }, anchorText: { type: String, maxlength: 100 } }],
+  status: { type: String, enum: ['draft', 'submitted', 'approved', 'published', 'rejected'], default: 'draft' },
+  editor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  adminNotes: { type: String, maxlength: 2000 }, publishedAt: Date
+}, { timestamps: true });
+GuestPostSchema.index({ status: 1, createdAt: -1 });
+GuestPostSchema.pre('validate', function () { if (this.status === 'published') this.publishedAt ||= new Date(); });
 const CommentSchema = new Schema({ post: { type: Schema.Types.ObjectId, ref: 'Post', required: true }, user: { type: Schema.Types.ObjectId, ref: 'User', required: true }, parentComment: { type: Schema.Types.ObjectId, ref: 'Comment', default: null }, content: { type: String, required: true, maxlength: 2000 }, status: { type: String, enum: ['pending', 'approved', 'spam'], default: 'pending' } }, { timestamps: true });
 const SubscriberSchema = new Schema({ email: { type: String, unique: true, lowercase: true }, status: { type: String, enum: ['pending', 'subscribed', 'unsubscribed'], default: 'pending' }, resendContactId: String, confirmToken: String, subscribedAt: Date }, { timestamps: true });
 const KeywordQueueSchema = new Schema({ keyword: { type: String, required: true }, targetCategory: { type: Schema.Types.ObjectId, ref: 'Category' }, priority: { type: Number, default: 0 }, status: { type: String, enum: ['pending', 'used'], default: 'pending' } }, { timestamps: true });
@@ -93,6 +108,7 @@ InquirySchema.index({ status: 1, createdAt: -1 });
 
 export const Post = model('Post', PostSchema); export const Category = model('Category', CategorySchema);
 export const User = model('User', UserSchema); export const Comment = model('Comment', CommentSchema);
+export const GuestPost = model('GuestPost', GuestPostSchema);
 export const Subscriber = model('Subscriber', SubscriberSchema); export const KeywordQueue = model('KeywordQueue', KeywordQueueSchema);
 export const SiteSettings = model('SiteSettings', SiteSettingsSchema);
 export const Service = model('Service', ServiceSchema); export const Inquiry = model('Inquiry', InquirySchema);

@@ -4,8 +4,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import slugify from 'slugify';
 import { z } from 'zod';
-import { Post, Category, Comment, User, Subscriber, KeywordQueue, SiteSettings, Service, Inquiry } from '../models/index.js';
-import { auth, admin } from '../middleware/index.js';
+import { Post, Category, Comment, User, Subscriber, KeywordQueue, SiteSettings, Service, Inquiry, GuestPost } from '../models/index.js';
+import { auth, admin, editor } from '../middleware/index.js';
 import { generatePost } from '../services/aiAgent.js';
 import { requestSubscription, confirmSubscription } from '../services/newsletter.js';
 import { uploadImage } from '../services/cloudinary.js';
@@ -67,12 +67,30 @@ const inquiryInput = z.object({
   budget: z.string().trim().max(80).optional().default(''), message: z.string().trim().min(10).max(4000),
   website: z.string().max(0).optional().default('')
 });
+const guestPostInput = z.object({
+  title: z.string().trim().min(1).max(120), content: z.string().trim().min(1).max(50000),
+  excerpt: z.string().trim().max(300).optional().default(''), authorName: z.string().trim().min(2).max(80),
+  authorEmail: z.string().trim().email().max(180), website: z.string().trim().url().max(300).optional().or(z.literal('')).default(''),
+  backlinks: z.array(z.object({ url: z.string().trim().url().max(300), anchorText: z.string().trim().max(100).optional().default('') })).max(2).default([]),
+  status: z.enum(['draft', 'submitted']).optional().default('draft')
+});
+const guestPostPayload = (body, user) => {
+  const parsed = guestPostInput.parse(body);
+  if (parsed.status === 'submitted' && (parsed.title.length < 10 || parsed.content.length < 600)) throw Object.assign(new Error('Submitted guest posts need a 10-character title and at least 600 words'), { status: 400 });
+  return { ...parsed, slug: slugify(parsed.title, { lower: true, strict: true }), editor: user.id };
+};
 
 r.post('/auth/register', wrap(async (req,res)=>{ const u=await User.create({name:req.body.name,email:req.body.email,passwordHash:await bcrypt.hash(req.body.password,12)}); const t=tokens(u); u.refreshTokenHash=await bcrypt.hash(t.refresh,10); await u.save(); res.cookie('accessToken',t.access,{...cookie,maxAge:900000}).cookie('refreshToken',t.refresh,{...cookie,maxAge:604800000}).status(201).json({user:{id:u.id,name:u.name,role:u.role}}); }));
 r.post('/auth/login', wrap(async(req,res)=>{const u=await User.findOne({email:req.body.email});if(!u||!await bcrypt.compare(req.body.password,u.passwordHash))return res.status(401).json({error:'Invalid credentials'});const t=tokens(u);u.refreshTokenHash=await bcrypt.hash(t.refresh,10);await u.save();res.cookie('accessToken',t.access,{...cookie,maxAge:900000}).cookie('refreshToken',t.refresh,{...cookie,maxAge:604800000}).json({user:{id:u.id,name:u.name,role:u.role}});}));
 r.get('/auth/me',auth,wrap(async(req,res)=>{const u=await User.findById(req.user.id).select('name email role');res.json({user:u});}));
 r.post('/auth/refresh',wrap(async(req,res)=>{const data=jwt.verify(req.cookies.refreshToken,process.env.JWT_REFRESH_SECRET);const u=await User.findById(data.id);if(!u||!await bcrypt.compare(req.cookies.refreshToken,u.refreshTokenHash))return res.status(401).json({error:'Invalid refresh token'});const t=tokens(u);res.cookie('accessToken',t.access,{...cookie,maxAge:900000}).json({ok:true});}));
 r.post('/auth/logout',(_,res)=>res.clearCookie('accessToken',cookie).clearCookie('refreshToken',cookie).json({ok:true}));
+
+r.get('/guest-posts',auth,editor,wrap(async(req,res)=>{ const query=req.user.role==='admin'?{}:{editor:req.user.id}; if(req.query.status&&req.query.status!=='all')query.status=req.query.status; res.json(await GuestPost.find(query).populate('editor','name email').sort({createdAt:-1})); }));
+r.get('/guest-posts/:id',auth,editor,wrap(async(req,res)=>{ const item=await GuestPost.findById(req.params.id).populate('editor','name email'); if(!item)return res.status(404).json({error:'Guest post not found'}); if(req.user.role!=='admin'&&String(item.editor._id)!==req.user.id)return res.status(403).json({error:'You can only view your own guest posts'}); res.json(item); }));
+r.post('/guest-posts',auth,editor,wrap(async(req,res)=>{ const payload=guestPostPayload(req.body,req.user); const count=await GuestPost.countDocuments({slug:payload.slug}); if(count)payload.slug=`${payload.slug}-${count+1}`; res.status(201).json(await GuestPost.create(payload)); }));
+r.put('/guest-posts/:id',auth,editor,wrap(async(req,res)=>{ const item=await GuestPost.findById(req.params.id); if(!item)return res.status(404).json({error:'Guest post not found'}); const isAdmin=req.user.role==='admin'; if(!isAdmin&&String(item.editor)!==req.user.id)return res.status(403).json({error:'You can only edit your own guest posts'}); if(!isAdmin&&!['draft','submitted'].includes(item.status))return res.status(409).json({error:'This submission is already under editorial review'}); if(isAdmin){ const allowed={}; for(const key of ['status','adminNotes'])if(req.body[key]!==undefined)allowed[key]=req.body[key]; if(req.body.status==='published')allowed.publishedAt=item.publishedAt||new Date(); item.set(allowed); } else { const payload=guestPostPayload(req.body,req.user); item.set(payload); } await item.save(); res.json(await item.populate('editor','name email')); }));
+r.delete('/guest-posts/:id',auth,editor,wrap(async(req,res)=>{ const item=await GuestPost.findById(req.params.id); if(!item)return res.status(404).end(); if(req.user.role!=='admin'&&String(item.editor)!==req.user.id)return res.status(403).json({error:'You can only delete your own guest posts'}); if(req.user.role!=='admin'&&item.status!=='draft')return res.status(409).json({error:'Only drafts can be deleted'}); await item.deleteOne(); res.status(204).end(); }));
 
 r.get('/posts',wrap(async(req,res)=>{const q={};if(req.query.status==='all'){requireAdminQuery(req);if(['draft','published'].includes(req.query.filter))q.status=req.query.filter;}else q.status='published';if(req.query.category)q.category=req.query.category;if(req.query.search)q.$text={$search:req.query.search};const limit=Math.min(+req.query.limit||12,100),page=Math.max(+req.query.page||1,1);const [items,total]=await Promise.all([Post.find(q).populate('category').sort({publishedAt:-1,createdAt:-1}).skip((page-1)*limit).limit(limit),Post.countDocuments(q)]);res.json({items:items.map(publicPost),total,page,pages:Math.ceil(total/limit)});}));
 r.get('/posts/id/:id',auth,admin,wrap(async(req,res)=>{const p=await Post.findById(req.params.id).populate('category');if(!p)return res.status(404).json({error:'Post not found'});res.json(p);}));
@@ -114,7 +132,8 @@ r.patch('/subscribers/:id',auth,admin,wrap(async(req,res)=>res.json(await Subscr
 r.delete('/subscribers/:id',auth,admin,wrap(async(req,res)=>{await Subscriber.findByIdAndDelete(req.params.id);res.status(204).end();}));
 
 r.get('/users',auth,admin,wrap(async(_,res)=>res.json(await User.find().select('-passwordHash -refreshTokenHash'))));
-r.patch('/users/:id',auth,admin,wrap(async(req,res)=>res.json(await User.findByIdAndUpdate(req.params.id,{role:req.body.role},{new:true}).select('-passwordHash -refreshTokenHash'))));
+r.post('/users',auth,admin,wrap(async(req,res)=>{ const email=String(req.body.email||'').trim().toLowerCase(); const password=String(req.body.password||''); const role=['reader','editor','admin'].includes(req.body.role)?req.body.role:'editor'; if(!email.includes('@'))return res.status(400).json({error:'Enter a valid email address'}); if(password.length<12)return res.status(400).json({error:'Password must contain at least 12 characters'}); if(await User.exists({email}))return res.status(409).json({error:'A user with this email already exists'}); const user=await User.create({name:String(req.body.name||'Guest editor').trim(),email,passwordHash:await bcrypt.hash(password,12),role}); res.status(201).json(user.toObject({transform:(_,ret)=>{delete ret.passwordHash;delete ret.refreshTokenHash;return ret}})); }));
+r.patch('/users/:id',auth,admin,wrap(async(req,res)=>{if(!['reader','editor','admin'].includes(req.body.role))return res.status(400).json({error:'Invalid role'});return res.json(await User.findByIdAndUpdate(req.params.id,{role:req.body.role},{new:true}).select('-passwordHash -refreshTokenHash'));}));
 r.post('/ai-agent/generate',auth,admin,wrap(async(req,res)=>res.status(201).json(await generatePost({topic:req.body.topic,category:req.body.category,mode:'manual'}))));
 r.get('/keyword-queue',auth,admin,wrap(async(_,res)=>res.json(await KeywordQueue.find().populate('targetCategory').sort({priority:-1}))));
 r.post('/keyword-queue',auth,admin,wrap(async(req,res)=>res.status(201).json(await KeywordQueue.create(req.body))));
