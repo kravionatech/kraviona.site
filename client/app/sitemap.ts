@@ -1,6 +1,6 @@
-import type { MetadataRoute } from 'next';
-import { api } from '@/lib/api';
-import { SITE_URL } from '@/lib/site';
+import type { MetadataRoute } from "next";
+import { api } from "@/lib/api";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -18,10 +18,10 @@ async function getAllPosts(maxPosts: number) {
   if (pages > 1) {
     const remaining = await Promise.all(
       Array.from({ length: pages - 1 }, (_, index) =>
-        api(`/posts?page=${index + 2}&limit=${limit}`)
-      )
+        api(`/posts?page=${index + 2}&limit=${limit}`),
+      ),
     );
-    remaining.forEach(page => posts.push(...(page.items || [])));
+    remaining.forEach((page) => posts.push(...(page.items || [])));
   }
 
   return posts.slice(0, maxPosts);
@@ -34,20 +34,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let services: any[] = [];
 
   try {
-    settings = await api('/settings');
+    settings = await api("/settings");
     const crawler = settings.crawlerSettings || {};
-    const maxPosts = Math.min(5000, Math.max(1, crawler.sitemapMaxPosts || 500));
+    const maxPosts = Math.min(
+      5000,
+      Math.max(1, crawler.sitemapMaxPosts || 500),
+    );
     [posts, categories, services] = await Promise.all([
       crawler.sitemapIncludePosts === false ? [] : getAllPosts(maxPosts),
-      crawler.sitemapIncludeCategories === false ? [] : api('/categories'),
-      crawler.sitemapIncludeServices === false ? [] : api('/services')
+      crawler.sitemapIncludeCategories === false ? [] : api("/categories"),
+      crawler.sitemapIncludeServices === false ? [] : api("/services"),
     ]);
   } catch (error) {
-    console.error('Sitemap data error:', error);
+    console.error("Sitemap data error:", error);
   }
 
   const latestPostDate = posts
-    .map(post => validDate(post.updatedAt || post.publishedAt))
+    .map((post) => validDate(post.updatedAt || post.publishedAt))
     .filter((date): date is Date => Boolean(date))
     .sort((a, b) => b.getTime() - a.getTime())[0];
   const settingsDate = validDate(settings.updatedAt);
@@ -55,48 +58,72 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const crawler = settings.crawlerSettings || {};
 
   const urls: MetadataRoute.Sitemap = [
-    { url: SITE_URL, lastModified: siteDate, changeFrequency: 'daily', priority: 1 },
-    { url: `${SITE_URL}/blog`, lastModified: latestPostDate, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${SITE_URL}/services`, lastModified: settingsDate, changeFrequency: 'monthly', priority: 0.8 },
+    {
+      url: SITE_URL,
+      lastModified: siteDate,
+      changeFrequency: "daily",
+      priority: 1,
+    },
+    {
+      url: `${SITE_URL}/blog`,
+      lastModified: latestPostDate,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/services`,
+      lastModified: settingsDate,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/guest-posting`,
+      lastModified: new Date("2026-08-09T00:00:00+05:30"),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
   ];
 
   if (crawler.sitemapIncludeNewsletter !== false) {
     urls.push({
       url: `${SITE_URL}/newsletter`,
       lastModified: settingsDate,
-      changeFrequency: 'monthly',
-      priority: 0.6
+      changeFrequency: "monthly",
+      priority: 0.6,
     });
   }
 
   urls.push(
     ...posts
-      .filter(post => post.slug && !post.seo?.isNoIndex)
-      .map(post => ({
+      .filter((post) => post.slug && !post.seo?.isNoIndex)
+      .map((post) => ({
         url: `${SITE_URL}/blog/${post.slug}`,
         lastModified: validDate(post.updatedAt || post.publishedAt),
-        changeFrequency: 'monthly' as const,
-        priority: 0.8
+        changeFrequency: "monthly" as const,
+        priority: 0.8,
       })),
     ...categories
-      .filter(category => category.slug && !category.seo?.isNoIndex)
-      .map(category => ({
+      .filter((category) => category.slug && !category.seo?.isNoIndex)
+      .map((category) => ({
         url: `${SITE_URL}/category/${category.slug}`,
         lastModified: validDate(category.updatedAt),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7
-      }))
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
   );
 
   // Services currently share one canonical landing page, so do not emit
   // non-existent /services/:slug URLs. Service changes still update /services.
   if (services.length) {
     const latestServiceDate = services
-      .map(service => validDate(service.updatedAt))
+      .map((service) => validDate(service.updatedAt))
       .filter((date): date is Date => Boolean(date))
       .sort((a, b) => b.getTime() - a.getTime())[0];
-    const servicesEntry = urls.find(entry => entry.url === `${SITE_URL}/services`);
-    if (servicesEntry && latestServiceDate) servicesEntry.lastModified = latestServiceDate;
+    const servicesEntry = urls.find(
+      (entry) => entry.url === `${SITE_URL}/services`,
+    );
+    if (servicesEntry && latestServiceDate)
+      servicesEntry.lastModified = latestServiceDate;
   }
 
   return urls;

@@ -1,1 +1,35 @@
-'use client';import {useEffect,useState} from 'react';import {API} from '../../../lib/api';export default function Comments({post}:{post:string}){const[x,setX]=useState<any[]>([]);useEffect(()=>{fetch(`${API}/comments?post=${post}`).then(r=>r.json()).then(setX).catch(()=>{})},[post]);if(!x.length)return null;return <section className="conversation"><div className="eyebrow">Reader perspectives</div><h2>Conversation</h2>{x.filter(c=>!c.parentComment).map(c=><div className="comment" key={c._id}><strong>{c.user?.name||'Reader'}</strong><p>{c.content}</p>{x.filter(r=>r.parentComment===c._id).map(r=><div className="reply" key={r._id}><strong>{r.user?.name}</strong><p>{r.content}</p></div>)}</div>)}</section>}
+"use client";
+import { useEffect, useState } from "react";
+import { API } from "../../../lib/api";
+export default function Comments({ post }: { post: string }) {
+  const [x, setX] = useState<any[]>([]);
+  useEffect(() => {
+    fetch(`${API}/comments?post=${post}`)
+      .then((r) => r.json())
+      .then(setX)
+      .catch(() => {});
+  }, [post]);
+  if (!x.length) return null;
+  return (
+    <section className="conversation">
+      <div className="eyebrow">Reader perspectives</div>
+      <h2>Conversation</h2>
+      {x
+        .filter((c) => !c.parentComment)
+        .map((c) => (
+          <div className="comment" key={c._id}>
+            <strong>{c.user?.name || "Reader"}</strong>
+            <p>{c.content}</p>
+            {x
+              .filter((r) => r.parentComment === c._id)
+              .map((r) => (
+                <div className="reply" key={r._id}>
+                  <strong>{r.user?.name}</strong>
+                  <p>{r.content}</p>
+                </div>
+              ))}
+          </div>
+        ))}
+    </section>
+  );
+}

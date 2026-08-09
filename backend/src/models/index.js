@@ -280,6 +280,7 @@ const InquirySchema = new Schema(
 );
 InquirySchema.index({ status: 1, createdAt: -1 });
 
+/* Payment gateway models removed. Historical schema retained temporarily for migration context.
 const PaymentSettingsSchema = new Schema(
   {
     key: { type: String, unique: true, default: "primary" },
@@ -352,6 +353,7 @@ const PostAccessSchema = new Schema(
   { timestamps: true },
 );
 PostAccessSchema.index({ post: 1, emailHash: 1 }, { unique: true });
+*/
 
 export const Post = model("Post", PostSchema);
 export const Category = model("Category", CategorySchema);
@@ -363,7 +365,3 @@ export const KeywordQueue = model("KeywordQueue", KeywordQueueSchema);
 export const SiteSettings = model("SiteSettings", SiteSettingsSchema);
 export const Service = model("Service", ServiceSchema);
 export const Inquiry = model("Inquiry", InquirySchema);
-export const PaymentSettings = model("PaymentSettings", PaymentSettingsSchema);
-export const PostPaywall = model("PostPaywall", PostPaywallSchema);
-export const Payment = model("Payment", PaymentSchema);
-export const PostAccess = model("PostAccess", PostAccessSchema);

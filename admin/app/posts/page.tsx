@@ -1,3 +1,134 @@
-'use client';
-import {useEffect,useMemo,useState} from 'react';import {call} from '../../lib/api';
-export default function Posts(){const[posts,setPosts]=useState<any[]>([]),[search,setSearch]=useState(''),[filter,setFilter]=useState('all'),[loading,setLoading]=useState(true);const load=()=>call('/posts?status=all&limit=100').then(d=>setPosts(d.items)).finally(()=>setLoading(false));useEffect(()=>{load().catch(()=>{})},[]);const visible=useMemo(()=>posts.filter(p=>(filter==='all'||p.status===filter)&&p.title.toLowerCase().includes(search.toLowerCase())),[posts,filter,search]);return <><div className="top"><div><span className="page-kicker">Editorial</span><h1>Stories</h1><p className="muted">Write, review, optimize, and publish.</p></div><a className="btn" href="/posts/create">+ New story</a></div><div className="content-toolbar"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search stories…"/><div className="filter-tabs">{['all','published','draft'].map(x=><button className={filter===x?'active':''} onClick={()=>setFilter(x)} key={x}>{x} <span>{x==='all'?posts.length:posts.filter(p=>p.status===x).length}</span></button>)}</div></div><div className="data-panel">{loading?<div className="loading-state">Loading stories…</div>:visible.length===0?<div className="empty-admin"><h2>No stories found</h2><a className="btn" href="/posts/create">Create your first story</a></div>:<table><thead><tr><th>Story</th><th>Category</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody>{visible.map(p=><tr key={p._id}><td><a className="story-title" href={`/posts/${p._id}`}>{p.title}</a><span className="table-sub">/{p.slug} · {p.wordCount||0} words</span></td><td>{p.category?.name||'—'}</td><td><span className={`status status-${p.status}`}>{p.status}</span></td><td>{new Date(p.updatedAt).toLocaleDateString()}</td><td><div className="row-actions"><a href={`/posts/${p._id}`}>Edit</a>{p.status==='published'&&<a target="_blank" href={`${process.env.NEXT_PUBLIC_CLIENT_URL||'http://localhost:3000'}/blog/${p.slug}`}>View ↗</a>}<button onClick={async()=>{if(confirm(`Delete “${p.title}”? This cannot be undone.`)){await call(`/posts/${p._id}`,{method:'DELETE'});load()}}}>Delete</button></div></td></tr>)}</tbody></table>}</div></>}
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { call } from "../../lib/api";
+export default function Posts() {
+  const [posts, setPosts] = useState<any[]>([]),
+    [search, setSearch] = useState(""),
+    [filter, setFilter] = useState("all"),
+    [loading, setLoading] = useState(true);
+  const load = () =>
+    call("/posts?status=all&limit=100")
+      .then((d) => setPosts(d.items))
+      .finally(() => setLoading(false));
+  useEffect(() => {
+    load().catch(() => {});
+  }, []);
+  const visible = useMemo(
+    () =>
+      posts.filter(
+        (p) =>
+          (filter === "all" || p.status === filter) &&
+          p.title.toLowerCase().includes(search.toLowerCase()),
+      ),
+    [posts, filter, search],
+  );
+  return (
+    <>
+      <div className="top">
+        <div>
+          <span className="page-kicker">Editorial</span>
+          <h1>Stories</h1>
+          <p className="muted">Write, review, optimize, and publish.</p>
+        </div>
+        <a className="btn" href="/posts/create">
+          + New story
+        </a>
+      </div>
+      <div className="content-toolbar">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search stories…"
+        />
+        <div className="filter-tabs">
+          {["all", "published", "draft"].map((x) => (
+            <button
+              className={filter === x ? "active" : ""}
+              onClick={() => setFilter(x)}
+              key={x}
+            >
+              {x}{" "}
+              <span>
+                {x === "all"
+                  ? posts.length
+                  : posts.filter((p) => p.status === x).length}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="data-panel">
+        {loading ? (
+          <div className="loading-state">Loading stories…</div>
+        ) : visible.length === 0 ? (
+          <div className="empty-admin">
+            <h2>No stories found</h2>
+            <a className="btn" href="/posts/create">
+              Create your first story
+            </a>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Story</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Updated</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((p) => (
+                <tr key={p._id}>
+                  <td>
+                    <a className="story-title" href={`/posts/${p._id}`}>
+                      {p.title}
+                    </a>
+                    <span className="table-sub">
+                      /{p.slug} · {p.wordCount || 0} words
+                    </span>
+                  </td>
+                  <td>{p.category?.name || "—"}</td>
+                  <td>
+                    <span className={`status status-${p.status}`}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td>{new Date(p.updatedAt).toLocaleDateString()}</td>
+                  <td>
+                    <div className="row-actions">
+                      <a href={`/posts/${p._id}`}>Edit</a>
+                      {p.status === "published" && (
+                        <a
+                          target="_blank"
+                          href={`${process.env.NEXT_PUBLIC_CLIENT_URL || "http://localhost:3000"}/blog/${p.slug}`}
+                        >
+                          View ↗
+                        </a>
+                      )}
+                      <button
+                        onClick={async () => {
+                          if (
+                            confirm(
+                              `Delete “${p.title}”? This cannot be undone.`,
+                            )
+                          ) {
+                            await call(`/posts/${p._id}`, { method: "DELETE" });
+                            load();
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  );
+}

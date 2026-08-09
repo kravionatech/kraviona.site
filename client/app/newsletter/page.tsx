@@ -1,9 +1,95 @@
-import type { Metadata } from 'next';
-import NewsletterForm from '../../components/NewsletterForm';
-import { DEFAULT_OG_IMAGE, jsonLd, SITE_URL } from '../../lib/site';
-import './newsletter.css';
+import type { Metadata } from "next";
+import NewsletterForm from "../../components/NewsletterForm";
+import { DEFAULT_OG_IMAGE, jsonLd, SITE_URL } from "../../lib/site";
+import "./newsletter.css";
 
-const newsletterTitle='The Kraviona weekly briefing';
-const newsletterDescription='One original Kraviona essay or practical framework, delivered once a week. No noise.';
-export const metadata:Metadata={title:'The weekly briefing',description:newsletterDescription,alternates:{canonical:'/newsletter'},openGraph:{type:'website',url:'/newsletter',title:newsletterTitle,description:newsletterDescription,images:[{url:DEFAULT_OG_IMAGE,width:1200,height:630,alt:newsletterTitle}]},twitter:{card:'summary_large_image',title:newsletterTitle,description:newsletterDescription,images:[DEFAULT_OG_IMAGE]}};
-export default function Newsletter(){const ld={'@context':'https://schema.org','@type':'WebPage',name:'The Kraviona weekly briefing',url:`${SITE_URL}/newsletter`,description:'One original essay or practical framework, delivered once a week.',isPartOf:{'@id':`${SITE_URL}/#website`}};return <div className="newsletter-page"><section className="wrap newsletter-hero"><div><div className="eyebrow">One thoughtful email · Every week</div><h1>A quieter way to stay ahead.</h1><p className="lead">No breathless news cycle. No recycled threads. Just one deeply considered idea on technology, growth, or better work.</p><NewsletterForm/></div><aside className="newsletter-preview"><div className="preview-top"><span>THE KRAVIONA BRIEFING</span><span>ISSUE 024</span></div><div className="preview-body"><span className="kicker">This week’s idea</span><h2>The advantage of thinking one layer deeper.</h2><p>The obvious answer is usually where the useful question begins.</p><div className="preview-lines"><i/><i/><i/></div></div></aside></section><section className="newsletter-values"><div className="wrap"><div><b>01</b><h3>Original</h3><p>Written from first principles—not assembled from the feed.</p></div><div><b>02</b><h3>Practical</h3><p>Every issue leaves you with an idea worth applying.</p></div><div><b>03</b><h3>Respectful</h3><p>One email a week. Clear writing. Zero inbox games.</p></div></div></section><script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(ld)}}/></div>}
+const newsletterTitle = "The Kraviona weekly briefing";
+const newsletterDescription =
+  "One original Kraviona essay or practical framework, delivered once a week. No noise.";
+export const metadata: Metadata = {
+  title: "The weekly briefing",
+  description: newsletterDescription,
+  alternates: { canonical: "/newsletter" },
+  openGraph: {
+    type: "website",
+    url: "/newsletter",
+    title: newsletterTitle,
+    description: newsletterDescription,
+    images: [
+      { url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: newsletterTitle },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: newsletterTitle,
+    description: newsletterDescription,
+    images: [DEFAULT_OG_IMAGE],
+  },
+};
+export default function Newsletter() {
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "The Kraviona weekly briefing",
+    url: `${SITE_URL}/newsletter`,
+    description:
+      "One original essay or practical framework, delivered once a week.",
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+  };
+  return (
+    <div className="newsletter-page">
+      <section className="wrap newsletter-hero">
+        <div>
+          <div className="eyebrow">One thoughtful email · Every week</div>
+          <h1>A quieter way to stay ahead.</h1>
+          <p className="lead">
+            No breathless news cycle. No recycled threads. Just one deeply
+            considered idea on technology, growth, or better work.
+          </p>
+          <NewsletterForm />
+        </div>
+        <aside className="newsletter-preview">
+          <div className="preview-top">
+            <span>THE KRAVIONA BRIEFING</span>
+            <span>ISSUE 024</span>
+          </div>
+          <div className="preview-body">
+            <span className="kicker">This week’s idea</span>
+            <h2>The advantage of thinking one layer deeper.</h2>
+            <p>
+              The obvious answer is usually where the useful question begins.
+            </p>
+            <div className="preview-lines">
+              <i />
+              <i />
+              <i />
+            </div>
+          </div>
+        </aside>
+      </section>
+      <section className="newsletter-values">
+        <div className="wrap">
+          <div>
+            <b>01</b>
+            <h3>Original</h3>
+            <p>Written from first principles—not assembled from the feed.</p>
+          </div>
+          <div>
+            <b>02</b>
+            <h3>Practical</h3>
+            <p>Every issue leaves you with an idea worth applying.</p>
+          </div>
+          <div>
+            <b>03</b>
+            <h3>Respectful</h3>
+            <p>One email a week. Clear writing. Zero inbox games.</p>
+          </div>
+        </div>
+      </section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(ld) }}
+      />
+    </div>
+  );
+}

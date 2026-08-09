@@ -1,0 +1,1721 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kraviona Platform — Architecture, Workflow & SOP</title>
+    <style>
+      :root {
+        --ink: #102f34;
+        --muted: #5e7477;
+        --line: #dce6e3;
+        --paper: #ffffff;
+        --wash: #f2f6f4;
+        --accent: #f1764a;
+        --accent-soft: #fff0e9;
+        --green: #18724a;
+        --code: #0d292e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--wash);
+        color: var(--ink);
+        font:
+          15px/1.68 Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      a {
+        color: #17646a;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      nav {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        background: var(--ink);
+        color: #d9e7e4;
+        padding: 30px 22px;
+      }
+      nav .brand {
+        color: #fff;
+        font-size: 23px;
+        font-weight: 850;
+        letter-spacing: -1px;
+      }
+      nav .brand span {
+        color: var(--accent);
+      }
+      nav p {
+        color: #92aaa6;
+        font-size: 12px;
+      }
+      nav h2 {
+        margin: 34px 9px 10px;
+        color: #78938f;
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      nav a {
+        display: block;
+        border-radius: 7px;
+        color: #bfd0cd;
+        padding: 8px 10px;
+        font-size: 12px;
+        text-decoration: none;
+      }
+      nav a:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+      main {
+        width: 100%;
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 55px clamp(26px, 5vw, 72px) 100px;
+      }
+      .hero {
+        border-radius: 22px;
+        background: var(--ink);
+        color: #fff;
+        padding: clamp(32px, 6vw, 68px);
+        box-shadow: 0 24px 70px rgba(16, 47, 52, 0.18);
+      }
+      .kicker {
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+      }
+      h1 {
+        max-width: 850px;
+        margin: 12px 0 18px;
+        font-size: clamp(34px, 5vw, 61px);
+      }
+      .hero p {
+        max-width: 760px;
+        color: #bed0cd;
+        font-size: 17px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 28px;
+      }
+      .meta span {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        padding: 7px 11px;
+        color: #dce9e7;
+        font-size: 11px;
+      }
+      section {
+        scroll-margin-top: 30px;
+        margin-top: 66px;
+      }
+      section > h2 {
+        margin: 0 0 10px;
+        font-size: 31px;
+      }
+      .lead {
+        max-width: 820px;
+        margin-top: 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+      }
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--paper);
+        padding: 23px;
+        box-shadow: 0 8px 28px rgba(16, 47, 52, 0.045);
+      }
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .card h4 {
+        margin: 16px 0 4px;
+      }
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+      .tag {
+        display: inline-block;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: #aa4a29;
+        padding: 4px 8px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      .flow {
+        overflow-x: auto;
+        border: 1px solid #294b50;
+        border-radius: 14px;
+        background: var(--code);
+        color: #d9e8e5;
+        padding: 23px;
+        white-space: pre;
+        font:
+          13px/1.65 "Cascadia Code",
+          Consolas,
+          monospace;
+      }
+      code {
+        border-radius: 5px;
+        background: #e9efed;
+        padding: 2px 5px;
+        font:
+          12px "Cascadia Code",
+          Consolas,
+          monospace;
+      }
+      pre {
+        overflow: auto;
+        border-radius: 12px;
+        background: var(--code);
+        color: #dbe9e7;
+        padding: 20px;
+        font:
+          12px/1.65 "Cascadia Code",
+          Consolas,
+          monospace;
+      }
+      pre code {
+        background: transparent;
+        padding: 0;
+        font: inherit;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--paper);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 12px 14px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #eef3f1;
+        color: #496164;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td {
+        font-size: 12px;
+      }
+      .method {
+        display: inline-block;
+        min-width: 48px;
+        border-radius: 5px;
+        background: #eaf2f0;
+        color: #285c5c;
+        padding: 2px 6px;
+        font-weight: 800;
+        text-align: center;
+      }
+      .method.write {
+        background: #fff0e9;
+        color: #a84626;
+      }
+      .method.delete {
+        background: #ffebe8;
+        color: #a53728;
+      }
+      ol.steps {
+        padding: 0;
+        counter-reset: procedure;
+        list-style: none;
+      }
+      ol.steps > li {
+        position: relative;
+        min-height: 48px;
+        margin: 0 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: #fff;
+        padding: 14px 17px 14px 58px;
+      }
+      ol.steps > li::before {
+        position: absolute;
+        top: 12px;
+        left: 14px;
+        display: grid;
+        width: 31px;
+        height: 31px;
+        place-items: center;
+        border-radius: 8px;
+        background: var(--ink);
+        color: #fff;
+        counter-increment: procedure;
+        content: counter(procedure, decimal-leading-zero);
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .callout {
+        margin: 18px 0;
+        border-left: 4px solid var(--accent);
+        border-radius: 0 10px 10px 0;
+        background: var(--accent-soft);
+        padding: 15px 18px;
+      }
+      .good {
+        border-left-color: #36a270;
+        background: #eaf8f0;
+      }
+      .danger {
+        border-left-color: #be4b37;
+        background: #fff0ed;
+      }
+      .checklist {
+        columns: 2;
+        padding-left: 20px;
+      }
+      .checklist li {
+        margin-bottom: 8px;
+        break-inside: avoid;
+      }
+      footer {
+        margin-top: 80px;
+        border-top: 1px solid var(--line);
+        padding-top: 22px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      @media (max-width: 980px) {
+        .layout {
+          display: block;
+        }
+        nav {
+          position: static;
+          width: 100%;
+          height: auto;
+        }
+        nav h2,
+        nav a {
+          display: none;
+        }
+        .grid.three {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 680px) {
+        main {
+          padding: 24px 15px 60px;
+        }
+        .grid,
+        .grid.three {
+          grid-template-columns: 1fr;
+        }
+        .checklist {
+          columns: 1;
+        }
+        .hero {
+          border-radius: 14px;
+        }
+      }
+      @media print {
+        nav {
+          display: none;
+        }
+        .layout {
+          display: block;
+        }
+        main {
+          max-width: none;
+          padding: 0;
+        }
+        .hero {
+          box-shadow: none;
+        }
+        section {
+          break-inside: avoid;
+        }
+        body {
+          background: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav aria-label="SOP contents">
+        <div class="brand">kraviona<span>.</span></div>
+        <p>Architecture, workflows, API reference and operating procedures.</p>
+        <h2>Contents</h2>
+        <a href="#overview">1. Platform overview</a>
+        <a href="#structure">2. Project structure</a>
+        <a href="#architecture">3. System architecture</a>
+        <a href="#data">4. Data model</a>
+        <a href="#workflows">5. Business workflows</a>
+        <a href="#api">6. API reference</a>
+        <a href="#mcp">7. MCP server</a>
+        <a href="#local">8. Local development</a>
+        <a href="#editorial">9. Editorial SOP</a>
+        <a href="#deployment">10. Deployment</a>
+        <a href="#security">11. Security</a>
+        <a href="#backup">12. Backup & recovery</a>
+        <a href="#incident">13. Incident response</a>
+        <a href="#standards">14. Code standards</a>
+        <a href="#release">15. Release checklist</a>
+        <a href="#troubleshooting">16. Troubleshooting</a>
+      </nav>
+
+      <main>
+        <header class="hero">
+          <div class="kicker">Master operating document</div>
+          <h1>Kraviona Platform Architecture & SOP</h1>
+          <p>
+            This document explains how the complete blog platform is structured,
+            how requests and data move through it, how editors and
+            administrators publish safely, and how the system is developed,
+            tested, deployed and recovered.
+          </p>
+          <div class="meta">
+            <span>Version 2.0</span>
+            <span>Updated 9 August 2026</span>
+            <span>Owner: Kraviona Engineering</span>
+            <span>Classification: Internal</span>
+          </div>
+        </header>
+
+        <section id="overview">
+          <h2>1. Platform overview</h2>
+          <p class="lead">
+            Kraviona is a MongoDB-backed editorial platform composed of a public
+            publication, an administrator studio, a contributor editor, an
+            Express API and an MCP automation service.
+          </p>
+          <div class="grid three">
+            <article class="card">
+              <span class="tag">Public</span>
+              <h3>Reader website</h3>
+              <p>
+                Search-indexable Next.js site containing the homepage, journal,
+                category pages, services, newsletter and guest-post application.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Private</span>
+              <h3>Admin studio</h3>
+              <p>
+                Administrator-only workspace for posts, categories,
+                contributors, comments, subscribers, services, enquiries, AI and
+                global settings.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Contributors</span>
+              <h3>Editor workspace</h3>
+              <p>
+                Approved editors create rich-text stories, manage SEO and
+                publish within their assigned backlink allowance.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Core</span>
+              <h3>Backend API</h3>
+              <p>
+                Express application implementing authentication, validation,
+                business rules, database access, uploads, email and automation.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Automation</span>
+              <h3>MCP server</h3>
+              <p>
+                Exposes 38 typed tools over local stdio or authenticated
+                Streamable HTTP for agents and approved MCP clients.
+              </p>
+            </article>
+            <article class="card">
+              <span class="tag">Data</span>
+              <h3>MongoDB & providers</h3>
+              <p>
+                MongoDB stores platform data. Cloudinary handles images, Resend
+                handles newsletter email and Anthropic generates optional
+                drafts.
+              </p>
+            </article>
+          </div>
+          <div class="callout">
+            <strong>Current commercial rule:</strong> the payment gateway and
+            article paywall are removed. Published journal content is public.
+            Guest posting is free during the configured campaign; editorial and
+            safety standards still apply.
+          </div>
+        </section>
+
+        <section id="structure">
+          <h2>2. Project structure</h2>
+          <p class="lead">
+            The repository is an npm workspace monorepo. Each application has
+            its own package while sharing one lockfile and root commands.
+          </p>
+          <pre><code>kraviona.site/
+├── client/                 Public Next.js website (port 3000)
+│   ├── app/                Routes, metadata, sitemap, robots and feeds
+│   ├── components/         Cards, forms, navigation, campaigns and ads
+│   └── lib/                Public API and canonical-site helpers
+├── admin/                  Private Next.js administrator studio (port 3001)
+│   ├── app/                Dashboard and management routes
+│   ├── components/         Admin navigation, post editor and media fields
+│   └── lib/                Authenticated API and site URL helpers
+├── editor/                 Approved contributor workspace (port 3002)
+│   ├── app/                Login, dashboard, composer and article list
+│   └── components/         Tiptap rich-text editor
+├── backend/                Express API (port 4000)
+│   ├── src/models/         Mongoose schemas and indexes
+│   ├── src/routes/         HTTP routes and business orchestration
+│   ├── src/middleware/     Authentication, role checks and errors
+│   ├── src/services/       AI, Cloudinary, email and bootstrap services
+│   ├── src/jobs/           Scheduled keyword-to-draft automation
+│   └── src/scripts/        Admin bootstrap, seed and migration scripts
+├── mcp-server/             MCP stdio/HTTP service (port 4100 by default)
+│   ├── src/tools/          Domain-specific tool registrations
+│   ├── src/api.js          Authenticated Kraviona API client
+│   ├── src/http.js         OAuth-protected Streamable HTTP transport
+│   └── tests/              Contract, integration and OAuth smoke tests
+├── docs/                   Architecture and operating documentation
+├── package.json            Workspace commands
+└── package-lock.json       Reproducible dependency graph</code></pre>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Application</th>
+                  <th>Development URL</th>
+                  <th>Production default</th>
+                  <th>Audience</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Client</td>
+                  <td><code>http://localhost:3000</code></td>
+                  <td><code>https://kraviona.site</code></td>
+                  <td>Public readers</td>
+                </tr>
+                <tr>
+                  <td>Admin</td>
+                  <td><code>http://localhost:3001</code></td>
+                  <td>Value of <code>ADMIN_URL</code></td>
+                  <td>Administrators</td>
+                </tr>
+                <tr>
+                  <td>Editor</td>
+                  <td><code>http://localhost:3002</code></td>
+                  <td><code>https://editor.kraviona.site</code></td>
+                  <td>Approved editors</td>
+                </tr>
+                <tr>
+                  <td>Backend</td>
+                  <td><code>http://localhost:4000</code></td>
+                  <td><code>https://api.kraviona.site</code></td>
+                  <td>Applications and MCP</td>
+                </tr>
+                <tr>
+                  <td>MCP HTTP</td>
+                  <td><code>http://localhost:4100</code></td>
+                  <td>Dedicated protected MCP host</td>
+                  <td>Approved MCP clients</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="architecture">
+          <h2>3. System architecture</h2>
+          <div class="flow">
+            Reader ──────────────► Client Next.js ───────┐ Administrator
+            ───────► Admin Next.js ─────────┤ Approved editor ─────► Editor
+            Next.js ────────┼──► Express API ───► MongoDB MCP client ──────────►
+            MCP stdio/HTTP ────────┘ │ ├──► Cloudinary (images) ├──► Resend
+            (email) └──► Anthropic (drafts) Public discovery: Client ─►
+            robots.txt / sitemap.xml / feed.xml / llms.txt / ai.txt
+          </div>
+          <h3>Backend request lifecycle</h3>
+          <ol class="steps">
+            <li>
+              Express receives the request and checks whether its browser origin
+              is allowed by CORS.
+            </li>
+            <li>
+              JSON is parsed with a 10 MB limit and cookies are made available.
+            </li>
+            <li>
+              Protected routes verify the access JWT; role middleware enforces
+              administrator or editor access.
+            </li>
+            <li>
+              Zod and route-level checks validate input, ownership, word limits,
+              link limits and referenced IDs.
+            </li>
+            <li>
+              Mongoose performs database reads/writes and schema hooks calculate
+              derived values such as word count.
+            </li>
+            <li>
+              The route returns JSON; central error middleware returns a
+              consistent <code>{ "error": "message" }</code> response.
+            </li>
+          </ol>
+          <div class="callout good">
+            <strong>Canonical host rule:</strong> production URLs must come from
+            explicit environment variables or
+            <code>https://kraviona.site</code>. Never create production links
+            from <code>localhost</code>, a request Host header, or an undefined
+            setting.
+          </div>
+        </section>
+
+        <section id="data">
+          <h2>4. Data model</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Collection/model</th>
+                  <th>Purpose</th>
+                  <th>Important fields and invariants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Post</code></td>
+                  <td>Public first-party journal story</td>
+                  <td>
+                    Unique slug; draft/published status; content; category;
+                    author; SEO; word count; published date.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Category</code></td>
+                  <td>Topic navigation and landing page</td>
+                  <td>Unique slug, description, postCount and SEO.</td>
+                </tr>
+                <tr>
+                  <td><code>User</code></td>
+                  <td>Reader, editor or administrator identity</td>
+                  <td>
+                    Password hash only; editor status; backlink limit 0–50;
+                    refresh-token hash.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>GuestPost</code></td>
+                  <td>Contributor working record</td>
+                  <td>
+                    Editor ownership, backlinks, rich content, status, admin
+                    notes. Publishing ensures a corresponding public Post.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Comment</code></td>
+                  <td>Reader discussion</td>
+                  <td>
+                    Post/user references; pending, approved or spam state.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Subscriber</code></td>
+                  <td>Newsletter audience</td>
+                  <td>
+                    Unique lowercase email; pending, subscribed or unsubscribed;
+                    provider contact ID.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>KeywordQueue</code></td>
+                  <td>Scheduled AI content input</td>
+                  <td>Keyword, category, priority and pending/used status.</td>
+                </tr>
+                <tr>
+                  <td><code>SiteSettings</code></td>
+                  <td>Global frontend and crawler configuration</td>
+                  <td>
+                    Brand, hero, contact, services copy, default SEO, social
+                    links and crawler policy.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Service</code></td>
+                  <td>Commercial service page</td>
+                  <td>
+                    Slug, summary, deliverables, order, featured flag, status
+                    and SEO.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Inquiry</code></td>
+                  <td>Client project brief</td>
+                  <td>
+                    Contact details, service, message, source, follow-up status
+                    and private notes.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="callout danger">
+            <strong>Never store:</strong> plaintext passwords, JWT secrets, API
+            keys, bearer tokens or provider secrets in MongoDB content fields,
+            Git, logs, article HTML or MCP arguments.
+          </p>
+        </section>
+
+        <section id="workflows">
+          <h2>5. Business workflows</h2>
+          <div class="grid">
+            <article class="card">
+              <h3>Administrator-created story</h3>
+              <ol>
+                <li>Create or choose category.</li>
+                <li>Create post as draft.</li>
+                <li>
+                  Add semantic HTML, summary, author, media, takeaways, FAQs and
+                  SEO.
+                </li>
+                <li>Preview and verify facts/links.</li>
+                <li>Set status to published.</li>
+                <li>Confirm the public URL, sitemap and social preview.</li>
+              </ol>
+            </article>
+            <article class="card">
+              <h3>Editor direct publishing</h3>
+              <ol>
+                <li>User requests an editor account.</li>
+                <li>Admin approves the editor and backlink allowance.</li>
+                <li>Editor signs in and writes in Tiptap.</li>
+                <li>
+                  Client checks title, category, 300–2,500 words and link
+                  allowance.
+                </li>
+                <li>API sanitizes and validates again.</li>
+                <li>
+                  Publishing creates the contributor record and the public
+                  journal post.
+                </li>
+              </ol>
+            </article>
+            <article class="card">
+              <h3>Reviewed guest-post path</h3>
+              <ol>
+                <li>Submission remains draft/submitted.</li>
+                <li>Admin reads full content and outbound links.</li>
+                <li>Admin approves or rejects with private notes.</li>
+                <li>Publishing calls the shared public-post helper.</li>
+                <li>
+                  Helper prevents duplicate public slugs and increments category
+                  count once.
+                </li>
+              </ol>
+            </article>
+            <article class="card">
+              <h3>AI draft workflow</h3>
+              <ol>
+                <li>Admin supplies a topic and category.</li>
+                <li>AI service requests strict JSON.</li>
+                <li>
+                  Zod validates title, HTML, takeaways, FAQs and SEO limits.
+                </li>
+                <li>Manual generation remains draft/noindex.</li>
+                <li>
+                  A human verifies facts, originality and sources before
+                  publishing.
+                </li>
+              </ol>
+            </article>
+            <article class="card">
+              <h3>Newsletter workflow</h3>
+              <ol>
+                <li>Reader submits email.</li>
+                <li>Subscriber is stored as pending.</li>
+                <li>Resend sends a confirmation link.</li>
+                <li>Token confirmation changes status to subscribed.</li>
+                <li>
+                  Admin may unsubscribe; delete only for explicit removal
+                  requests.
+                </li>
+              </ol>
+            </article>
+            <article class="card">
+              <h3>Client enquiry workflow</h3>
+              <ol>
+                <li>Public form validates contact information and honeypot.</li>
+                <li>Inquiry begins as new.</li>
+                <li>Admin moves it through contacted, qualified and closed.</li>
+                <li>Spam is classified instead of mixed with active leads.</li>
+                <li>Private notes must remain factual and necessary.</li>
+              </ol>
+            </article>
+          </div>
+        </section>
+
+        <section id="api">
+          <h2>6. API reference</h2>
+          <p class="lead">
+            All application endpoints are under <code>/api</code>. The separate
+            service health endpoint is <code>/health</code>. “Editor+” means an
+            active editor or administrator.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Path</th>
+                  <th>Access</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/health</code></td>
+                  <td>Public</td>
+                  <td>Backend liveness.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/auth/register</code></td>
+                  <td>Public</td>
+                  <td>Create reader account.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/auth/editor-request</code></td>
+                  <td>Public</td>
+                  <td>Request pending editor account.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/auth/login</code></td>
+                  <td>Public</td>
+                  <td>Issue access and refresh cookies.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/auth/me</code></td>
+                  <td>Authenticated</td>
+                  <td>Current safe user profile.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/auth/refresh</code></td>
+                  <td>Refresh cookie</td>
+                  <td>Issue a fresh access cookie.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/auth/logout</code></td>
+                  <td>Public</td>
+                  <td>Clear authentication cookies.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/posts</code></td>
+                  <td>Public/admin query</td>
+                  <td>
+                    Published list; administrators may request all/drafts.
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/posts/:slug</code></td>
+                  <td>Public</td>
+                  <td>Published story by slug.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/posts/id/:id</code></td>
+                  <td>Admin</td>
+                  <td>Complete editable post.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/posts</code></td>
+                  <td>Admin</td>
+                  <td>Create story.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">PUT</span></td>
+                  <td><code>/api/posts/:id</code></td>
+                  <td>Admin</td>
+                  <td>Update story.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/posts/:id</code></td>
+                  <td>Admin</td>
+                  <td>Delete story.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/guest-posts[/:id]</code></td>
+                  <td>Editor+</td>
+                  <td>List or fetch owned/all contributor records.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/guest-posts</code></td>
+                  <td>Editor+</td>
+                  <td>Create draft or publish validated contributor story.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">PUT</span></td>
+                  <td><code>/api/guest-posts/:id</code></td>
+                  <td>Editor+/Admin</td>
+                  <td>Edit own draft or perform admin review.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/guest-posts/:id</code></td>
+                  <td>Editor+/Admin</td>
+                  <td>Delete according to ownership/status rules.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/categories</code></td>
+                  <td>Public</td>
+                  <td>List categories.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST/PUT</span></td>
+                  <td><code>/api/categories[/:id]</code></td>
+                  <td>Admin</td>
+                  <td>Create or update category.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/categories/:id</code></td>
+                  <td>Admin</td>
+                  <td>Delete only when unused.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/settings</code></td>
+                  <td>Public</td>
+                  <td>Read safe site settings.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">PUT</span></td>
+                  <td><code>/api/settings</code></td>
+                  <td>Admin</td>
+                  <td>Merge approved global/crawler settings.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/media/upload</code></td>
+                  <td>Editor+</td>
+                  <td>Validate and upload image data URI.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/services[/:slug]</code></td>
+                  <td>Public/admin preview</td>
+                  <td>List or read published service content.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST/PUT</span></td>
+                  <td><code>/api/services[/:id]</code></td>
+                  <td>Admin</td>
+                  <td>Create or update service.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/services/:id</code></td>
+                  <td>Admin</td>
+                  <td>Delete service only without enquiries.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/inquiries</code></td>
+                  <td>Public</td>
+                  <td>Submit project brief.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/inquiries</code></td>
+                  <td>Admin</td>
+                  <td>List/filter enquiries.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">PATCH</span></td>
+                  <td><code>/api/inquiries/:id</code></td>
+                  <td>Admin</td>
+                  <td>Update status and notes.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/inquiries/:id</code></td>
+                  <td>Admin</td>
+                  <td>Permanently delete enquiry.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/comments</code></td>
+                  <td>Public by post/Admin</td>
+                  <td>Approved post comments or moderation queue.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/comments</code></td>
+                  <td>Authenticated</td>
+                  <td>Create pending comment.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">PATCH</span></td>
+                  <td><code>/api/comments/:id</code></td>
+                  <td>Admin</td>
+                  <td>Approve or mark spam.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/comments/:id</code></td>
+                  <td>Admin</td>
+                  <td>Delete comment.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/newsletter/subscribe</code></td>
+                  <td>Public</td>
+                  <td>Start double opt-in.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/newsletter/confirm</code></td>
+                  <td>Public token</td>
+                  <td>Confirm subscription.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/subscribers</code></td>
+                  <td>Admin</td>
+                  <td>List subscribers.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST/PATCH</span></td>
+                  <td><code>/api/subscribers[/:id]</code></td>
+                  <td>Admin</td>
+                  <td>Add or change status.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/subscribers/:id</code></td>
+                  <td>Admin</td>
+                  <td>Permanently delete contact.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/users</code></td>
+                  <td>Admin</td>
+                  <td>List safe user fields.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST/PATCH</span></td>
+                  <td><code>/api/users[/:id]</code></td>
+                  <td>Admin</td>
+                  <td>Create user or update access.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/ai-agent/generate</code></td>
+                  <td>Admin</td>
+                  <td>Generate validated draft.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/keyword-queue</code></td>
+                  <td>Admin</td>
+                  <td>List automation queue.</td>
+                </tr>
+                <tr>
+                  <td><span class="method write">POST</span></td>
+                  <td><code>/api/keyword-queue</code></td>
+                  <td>Admin</td>
+                  <td>Add keyword.</td>
+                </tr>
+                <tr>
+                  <td><span class="method delete">DELETE</span></td>
+                  <td><code>/api/keyword-queue/:id</code></td>
+                  <td>Admin</td>
+                  <td>Delete queue item.</td>
+                </tr>
+                <tr>
+                  <td><span class="method">GET</span></td>
+                  <td><code>/api/dashboard</code></td>
+                  <td>Admin</td>
+                  <td>Operational totals and recent activity.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="mcp">
+          <h2>7. MCP server</h2>
+          <p class="lead">
+            The MCP server is an authenticated adapter. It contains no direct
+            database credentials and never bypasses backend authorization or
+            validation.
+          </p>
+          <div class="grid">
+            <article class="card">
+              <h3>Local stdio</h3>
+              <p>
+                The MCP host starts <code>src/index.js</code>. Tools call the
+                configured API URL. This is the simplest local development
+                option.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Remote HTTP</h3>
+              <p>
+                <code>src/http.js</code> creates stateful Streamable HTTP
+                sessions. Static bearer auth and OAuth DCR + PKCE protect
+                <code>/mcp</code>.
+              </p>
+            </article>
+          </div>
+          <h3>Tool groups</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Domain</th>
+                  <th>Tools</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>System</td>
+                  <td>
+                    <code>cms_health</code>, <code>get_dashboard_summary</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Posts</td>
+                  <td>
+                    <code>list_posts</code>, <code>get_post</code>,
+                    <code>create_post</code>, <code>update_post</code>,
+                    <code>set_post_status</code>, <code>delete_post</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Guest posts</td>
+                  <td>
+                    <code>list_guest_posts</code>, <code>get_guest_post</code>,
+                    <code>review_guest_post</code>,
+                    <code>delete_guest_post</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Moderation/audience</td>
+                  <td>
+                    <code>list_comments</code>, <code>moderate_comment</code>,
+                    <code>delete_comment</code>, <code>list_subscribers</code>,
+                    <code>save_subscriber</code>,
+                    <code>update_subscriber_status</code>,
+                    <code>delete_subscriber</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Access</td>
+                  <td>
+                    <code>list_users</code>, <code>create_editor_account</code>,
+                    <code>update_user_access</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Taxonomy/services/leads</td>
+                  <td>
+                    Category, service and enquiry list/save/update/delete tools.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Settings/automation</td>
+                  <td>
+                    Site settings, crawler settings, AI draft and keyword queue
+                    tools.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Safe MCP operating sequence</h3>
+          <ol class="steps">
+            <li>
+              Call the relevant list/get tool and identify the exact record ID.
+            </li>
+            <li>
+              Explain the intended change and preserve fields not in scope.
+            </li>
+            <li>
+              Create content as draft unless publication is explicitly
+              authorized.
+            </li>
+            <li>
+              For deletion, require the caller to provide
+              <code>confirm: true</code>.
+            </li>
+            <li>
+              Read the record again after mutation and report the resulting
+              status/URL.
+            </li>
+            <li>
+              Do not place secrets in tool arguments except the temporary
+              password required by account creation; transmit it separately and
+              rotate it.
+            </li>
+          </ol>
+        </section>
+
+        <section id="local">
+          <h2>8. Local development SOP</h2>
+          <ol class="steps">
+            <li>Install Node.js 22 and a reachable MongoDB instance.</li>
+            <li>Run <code>npm install</code> at the repository root.</li>
+            <li>
+              Copy <code>backend/.env.example</code> to
+              <code>backend/.env</code> and replace every required placeholder.
+            </li>
+            <li>
+              Use long independent JWT access and refresh secrets. Add explicit
+              client/admin/editor URLs.
+            </li>
+            <li>
+              Run <code>npm run bootstrap:admin -w backend</code> if an initial
+              administrator is required.
+            </li>
+            <li>
+              Start all applications with <code>npm run dev</code>, or start
+              workspaces individually.
+            </li>
+            <li>
+              Open client 3000, admin 3001, editor 3002 and verify backend
+              <code>/health</code> on 4000.
+            </li>
+            <li>Run builds and tests before committing.</li>
+          </ol>
+          <pre><code># Install
+npm install
+
+# Start complete local stack
+npm run dev
+
+# Verification
+npm test
+npm run test:mcp
+npm run build
+
+# MCP API integration (backend must be running)
+npm run test:integration -w mcp-server</code></pre>
+          <h3>Required backend environment</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Required</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>MONGO_URI</code></td>
+                  <td>Yes</td>
+                  <td>MongoDB connection.</td>
+                </tr>
+                <tr>
+                  <td><code>JWT_ACCESS_SECRET</code></td>
+                  <td>Yes</td>
+                  <td>Short-lived access token signing.</td>
+                </tr>
+                <tr>
+                  <td><code>JWT_REFRESH_SECRET</code></td>
+                  <td>Yes</td>
+                  <td>
+                    Refresh token signing; must differ from access secret.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>CLIENT_URL / ADMIN_URL / EDITOR_URL</code></td>
+                  <td>Production</td>
+                  <td>CORS and canonical application origins.</td>
+                </tr>
+                <tr>
+                  <td><code>CLOUDINARY_URL</code></td>
+                  <td>For uploads</td>
+                  <td>Cloud image provider.</td>
+                </tr>
+                <tr>
+                  <td><code>RESEND_API_KEY</code></td>
+                  <td>For email</td>
+                  <td>Newsletter delivery.</td>
+                </tr>
+                <tr>
+                  <td><code>ANTHROPIC_API_KEY / AI_MODEL</code></td>
+                  <td>For AI</td>
+                  <td>Draft generation.</td>
+                </tr>
+                <tr>
+                  <td><code>CRON_SCHEDULE / AUTO_PUBLISH</code></td>
+                  <td>Optional</td>
+                  <td>Automation schedule and publication safety.</td>
+                </tr>
+                <tr>
+                  <td><code>ADMIN_EMAIL / ADMIN_PASSWORD</code></td>
+                  <td>Bootstrap only</td>
+                  <td>Initial admin creation; do not use a weak password.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="editorial">
+          <h2>9. Editorial SOP</h2>
+          <div class="grid">
+            <article class="card">
+              <h3>Before publication</h3>
+              <ul>
+                <li>Confirm the search intent and reader problem.</li>
+                <li>Verify every factual claim and cited source.</li>
+                <li>Check originality and image usage rights.</li>
+                <li>Use one clear H1/title and logical H2/H3 headings.</li>
+                <li>Write a useful summary and descriptive image alt text.</li>
+                <li>
+                  Inspect every external link and avoid manipulative anchors.
+                </li>
+                <li>
+                  Complete title and description without stuffing keywords.
+                </li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>After publication</h3>
+              <ul>
+                <li>Open the canonical public URL.</li>
+                <li>Check mobile layout, images and links.</li>
+                <li>Confirm indexability and sitemap inclusion.</li>
+                <li>
+                  Verify structured data contains no undefined/incorrect values.
+                </li>
+                <li>Monitor corrections, comments and traffic quality.</li>
+                <li>Update stale facts and timestamps honestly.</li>
+              </ul>
+            </article>
+          </div>
+          <div class="callout">
+            <strong>Ranking rule:</strong> no workflow can guarantee a top
+            Google position. Optimise for usefulness, accuracy, crawlability,
+            reputation and legitimate internal/external references—not keyword
+            repetition or doorway content.
+          </div>
+        </section>
+
+        <section id="deployment">
+          <h2>10. Deployment SOP</h2>
+          <ol class="steps">
+            <li>
+              Create separate services/projects for client, admin, editor,
+              backend and remote MCP as required.
+            </li>
+            <li>
+              Set production environment variables in the hosting provider,
+              never in committed files.
+            </li>
+            <li>
+              Set
+              <code>NEXT_PUBLIC_API_URL=https://api.kraviona.site/api</code> for
+              browser applications.
+            </li>
+            <li>
+              Set explicit backend CORS origins for every real frontend domain.
+            </li>
+            <li>
+              Run backend tests, MCP contract tests and all Next.js production
+              builds.
+            </li>
+            <li>Deploy backend first and confirm <code>/health</code>.</li>
+            <li>
+              Deploy frontends and verify authentication cookies work
+              cross-origin over HTTPS.
+            </li>
+            <li>
+              Deploy MCP with a separate bearer secret and verify
+              <code>/health</code>, OAuth metadata and tool discovery.
+            </li>
+            <li>
+              Run post-deployment smoke checks and record the release
+              time/commit.
+            </li>
+          </ol>
+          <div class="callout danger">
+            <strong>Production protection:</strong> never use localhost
+            fallbacks in production settings. Never expose MongoDB, JWT,
+            provider or MCP administrator credentials through
+            <code>NEXT_PUBLIC_*</code> variables.
+          </div>
+        </section>
+
+        <section id="security">
+          <h2>11. Security SOP</h2>
+          <ul class="checklist">
+            <li>
+              Use independent random secrets for JWT access, JWT refresh and MCP
+              bearer authentication.
+            </li>
+            <li>Use HTTPS for every production origin.</li>
+            <li>Restrict CORS to exact known origins.</li>
+            <li>
+              Keep authentication cookies HTTP-only and secure in production.
+            </li>
+            <li>Grant least privilege: reader, editor, administrator.</li>
+            <li>Suspend compromised editors immediately.</li>
+            <li>Keep backlink limits intentional and documented.</li>
+            <li>Validate file type, data URI and maximum upload size.</li>
+            <li>
+              Sanitize guest HTML and disallow scriptable elements/protocols.
+            </li>
+            <li>Never log passwords, tokens, raw cookies or API keys.</li>
+            <li>Rotate secrets after exposure or staff access changes.</li>
+            <li>Review dependencies and lockfile changes before release.</li>
+            <li>Require explicit confirmation for destructive MCP tools.</li>
+            <li>
+              Keep admin, editor, backend and MCP pages out of search indexes.
+            </li>
+          </ul>
+        </section>
+
+        <section id="backup">
+          <h2>12. Backup and recovery SOP</h2>
+          <ol class="steps">
+            <li>
+              Schedule encrypted MongoDB backups with a retention policy
+              appropriate to the business.
+            </li>
+            <li>
+              Export Cloudinary asset inventory or retain provider-side
+              versioning.
+            </li>
+            <li>
+              Store backups outside the primary application account/region.
+            </li>
+            <li>
+              Test restoration into an isolated non-production database at least
+              quarterly.
+            </li>
+            <li>
+              Record recovery point objective (acceptable data loss) and
+              recovery time objective.
+            </li>
+            <li>
+              Before destructive migrations, take and verify a fresh backup.
+            </li>
+            <li>
+              After restore, rotate environment secrets if the incident involved
+              access compromise.
+            </li>
+            <li>
+              Verify counts for posts, users, subscribers, guest posts and
+              enquiries before reopening writes.
+            </li>
+          </ol>
+          <p class="callout">
+            <strong>Deletion policy:</strong> status changes are preferred for
+            operational records. Permanent deletion is reserved for explicit
+            legal/privacy requests, confirmed spam cleanup or approved
+            data-retention procedures.
+          </p>
+        </section>
+
+        <section id="incident">
+          <h2>13. Incident response</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Severity</th>
+                  <th>Examples</th>
+                  <th>Immediate response</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>P0 Critical</td>
+                  <td>
+                    Secret leak, database exposure, destructive unauthorized
+                    publishing.
+                  </td>
+                  <td>
+                    Disable affected service, revoke/rotate secrets, preserve
+                    evidence, restrict access and begin recovery.
+                  </td>
+                </tr>
+                <tr>
+                  <td>P1 High</td>
+                  <td>
+                    Authentication failure, API unavailable, mass broken
+                    content.
+                  </td>
+                  <td>
+                    Freeze deployments, inspect health/logs, rollback safe
+                    release or restore service.
+                  </td>
+                </tr>
+                <tr>
+                  <td>P2 Medium</td>
+                  <td>
+                    Single workflow broken, upload/email/AI provider failure.
+                  </td>
+                  <td>
+                    Disable affected optional feature, communicate workaround
+                    and create fix.
+                  </td>
+                </tr>
+                <tr>
+                  <td>P3 Low</td>
+                  <td>Visual issue, non-blocking copy or analytics problem.</td>
+                  <td>
+                    Record reproduction, prioritise and fix through normal
+                    release flow.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ol class="steps">
+            <li>
+              Detect and record timestamp, symptoms, affected URLs/users and
+              recent changes.
+            </li>
+            <li>Contain without destroying logs or evidence.</li>
+            <li>
+              Rotate compromised credentials and terminate invalid sessions.
+            </li>
+            <li>
+              Recover using a verified rollback, configuration fix or backup.
+            </li>
+            <li>Validate critical user journeys and data counts.</li>
+            <li>
+              Write a blameless post-incident review with cause, impact and
+              prevention actions.
+            </li>
+          </ol>
+        </section>
+
+        <section id="standards">
+          <h2>14. Human-readable code standards</h2>
+          <ul class="checklist">
+            <li>One responsibility per module or component.</li>
+            <li>Use descriptive names instead of single-letter variables.</li>
+            <li>Prefer early returns for validation and errors.</li>
+            <li>Centralise repeated response/error/query helpers.</li>
+            <li>Group routes and MCP tools by business domain.</li>
+            <li>Use comments to explain why, not obvious syntax.</li>
+            <li>Keep user-facing errors actionable and specific.</li>
+            <li>Validate at the trust boundary with Zod or explicit checks.</li>
+            <li>Do not silently swallow operational errors.</li>
+            <li>Keep production URLs in a single canonical helper.</li>
+            <li>
+              Format JavaScript, TypeScript, JSX, JSON, CSS and Markdown with
+              Prettier.
+            </li>
+            <li>
+              Add or update tests whenever tool contracts or business rules
+              change.
+            </li>
+          </ul>
+          <pre><code>// Preferred: named values and explicit control flow.
+const publishedPosts = posts.filter((post) => post.status === "published");
+
+if (!user) {
+  return response.status(404).json({ error: "User not found" });
+}
+
+// Avoid: compressed statements and ambiguous names.
+// const p=x.filter(y=>y.s==='published');if(!u)return r.status(404).end();</code></pre>
+        </section>
+
+        <section id="release">
+          <h2>15. Release checklist</h2>
+          <ul class="checklist">
+            <li>Scope and acceptance criteria are documented.</li>
+            <li>No unrelated user changes were overwritten.</li>
+            <li>All touched code is formatted and understandable.</li>
+            <li>Backend syntax and automated tests pass.</li>
+            <li>Client, admin and editor type checks/builds pass.</li>
+            <li>MCP syntax and 38-tool contract tests pass.</li>
+            <li>Destructive operations require explicit confirmation.</li>
+            <li>No secret or production credential is present in Git diff.</li>
+            <li>Canonical URLs and CORS domains are correct.</li>
+            <li>Database migration has backup and rollback steps.</li>
+            <li>Critical flows were smoke-tested.</li>
+            <li>Documentation and environment examples are updated.</li>
+            <li><code>git diff --check</code> passes.</li>
+            <li>Post-deployment health and public URLs are verified.</li>
+          </ul>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>16. Troubleshooting guide</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symptom</th>
+                  <th>Likely cause</th>
+                  <th>Checks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Frontend calls localhost in production</td>
+                  <td>
+                    Missing/malformed <code>NEXT_PUBLIC_API_URL</code> or unsafe
+                    fallback.
+                  </td>
+                  <td>
+                    Inspect hosting environment, rebuild frontend, check
+                    generated network requests.
+                  </td>
+                </tr>
+                <tr>
+                  <td>CORS blocked origin</td>
+                  <td>
+                    Exact frontend origin absent from backend environment.
+                  </td>
+                  <td>
+                    Verify protocol, host, port and trailing-slash
+                    normalization.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Editor cannot sign in</td>
+                  <td>
+                    Pending/suspended editor, wrong credentials or cookie domain
+                    issue.
+                  </td>
+                  <td>
+                    Check user status, backend response and HTTPS cookie
+                    behavior.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Guest story not public</td>
+                  <td>Record not published or public Post missing.</td>
+                  <td>
+                    Read guest status, retry publish, verify public slug and
+                    category count.
+                  </td>
+                </tr>
+                <tr>
+                  <td>MCP tool returns admin login error</td>
+                  <td>Missing MCP API credentials or non-admin account.</td>
+                  <td>
+                    Check three <code>KRAVIONA_*</code> variables and backend
+                    login.
+                  </td>
+                </tr>
+                <tr>
+                  <td>MCP HTTP returns 401</td>
+                  <td>Missing/invalid bearer or expired OAuth access token.</td>
+                  <td>
+                    Check Authorization header, MCP secret and OAuth
+                    metadata/token flow.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Image upload fails</td>
+                  <td>
+                    Cloudinary missing, unsupported type or image too large.
+                  </td>
+                  <td>
+                    Check provider URL, image MIME type and 7 MB editor limit.
+                  </td>
+                </tr>
+                <tr>
+                  <td>AI draft fails</td>
+                  <td>
+                    Missing provider key, invalid model response or validation
+                    failure.
+                  </td>
+                  <td>
+                    Check key/model, backend logs and strict JSON/word-count
+                    requirements.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Newsletter confirmation fails</td>
+                  <td>Expired/invalid token or email provider problem.</td>
+                  <td>
+                    Check subscriber record, Resend configuration and callback
+                    URL.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer>
+          <strong>Kraviona Engineering</strong><br />
+          Update this SOP whenever an application, API contract, model,
+          deployment target, security rule or editorial workflow changes.
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

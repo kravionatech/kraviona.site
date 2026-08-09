@@ -15,10 +15,6 @@ import {
   Service,
   Inquiry,
   GuestPost,
-  PaymentSettings,
-  PostPaywall,
-  Payment,
-  PostAccess,
 } from "../models/index.js";
 import { auth, admin, editor } from "../middleware/index.js";
 import { generatePost } from "../services/aiAgent.js";
@@ -27,20 +23,6 @@ import {
   confirmSubscription,
 } from "../services/newsletter.js";
 import { uploadImage } from "../services/cloudinary.js";
-import {
-  razorpay,
-  getPaymentSettings,
-  getPaywall,
-  verifyPaymentSignature,
-  verifyWebhook,
-  emailHash,
-  accessCookieName,
-  signAccess,
-  hasAccess,
-  paymentCredentials,
-  encryptSecret,
-} from "../services/payments.js";
-import { sendPaymentEmails } from "../services/paymentEmail.js";
 
 const r = Router();
 const wrap = (fn) => (req, res, next) =>
@@ -62,21 +44,6 @@ const tokens = (u) => ({
   }),
 });
 const siteBase = () => "https://kraviona.site";
-const paymentAttempts = new Map();
-function paymentRateLimit(req, res, next) {
-  const now = Date.now(),
-    key = req.ip || "unknown",
-    recent = (paymentAttempts.get(key) || []).filter(
-      (time) => now - time < 60000,
-    );
-  if (recent.length >= 5)
-    return res
-      .status(429)
-      .json({ error: "Too many payment attempts. Please wait one minute." });
-  recent.push(now);
-  paymentAttempts.set(key, recent);
-  next();
-}
 const legacyInternalLinkPattern =
   /https?:\/\/(?:www\.)?kraviona\.site\/(?:services\/(?:ai-automation|web-development)|contact)\/?(?=["'#?]|$)/gi;
 const sanitizeLegacyInternalLinks = (content) =>
@@ -334,6 +301,39 @@ const guestPostPayload = async (body, user) => {
   };
 };
 
+async function ensurePublicPostForGuest(guestPost) {
+  const existingPost = await Post.findOne({ slug: guestPost.slug });
+  if (existingPost) return existingPost;
+
+  const post = await Post.create(
+    normalizePost({
+      title: guestPost.title,
+      slug: guestPost.slug,
+      status: "published",
+      content: guestPost.content,
+      quickAnswer: guestPost.excerpt,
+      category: guestPost.category,
+      tags: guestPost.tags,
+      keyTakeaways: guestPost.keyTakeaways,
+      faqs: guestPost.faqs,
+      featuredImage: guestPost.featuredImage,
+      author: {
+        name: guestPost.authorName,
+        slug: slugify(guestPost.authorName, { lower: true, strict: true }),
+        sameAs: guestPost.website ? [guestPost.website] : [],
+      },
+      seo: {
+        metaTitle: guestPost.seo?.metaTitle || guestPost.title,
+        metaDescription: guestPost.seo?.metaDescription || guestPost.excerpt,
+        ogImage: guestPost.seo?.ogImage,
+      },
+    }),
+  );
+
+  await adjustCategoryPostCount(post.category, 1);
+  return post;
+}
+
 r.post(
   "/auth/register",
   wrap(async (req, res) => {
@@ -493,33 +493,7 @@ r.post(
       (await Post.countDocuments({ slug: payload.slug }));
     if (duplicateCount) payload.slug = `${payload.slug}-${duplicateCount + 1}`;
     const guest = await GuestPost.create(payload);
-    if (payload.status === "published") {
-      const post = await Post.create(
-        normalizePost({
-          title: payload.title,
-          slug: payload.slug,
-          status: "published",
-          content: payload.content,
-          quickAnswer: payload.excerpt,
-          category: payload.category,
-          tags: payload.tags,
-          keyTakeaways: payload.keyTakeaways,
-          faqs: payload.faqs,
-          featuredImage: payload.featuredImage,
-          author: {
-            name: payload.authorName,
-            slug: slugify(payload.authorName, { lower: true, strict: true }),
-            sameAs: payload.website ? [payload.website] : [],
-          },
-          seo: {
-            metaTitle: payload.seo.metaTitle || payload.title,
-            metaDescription: payload.seo.metaDescription || payload.excerpt,
-            ogImage: payload.seo.ogImage,
-          },
-        }),
-      );
-      await adjustCategoryPostCount(post.category, 1);
-    }
+    if (payload.status === "published") await ensurePublicPostForGuest(guest);
     res.status(201).json(await guest.populate("category", "name slug"));
   }),
 );
@@ -551,6 +525,7 @@ r.put(
       item.set(payload);
     }
     await item.save();
+    if (item.status === "published") await ensurePublicPostForGuest(item);
     res.json(await item.populate("editor", "name email"));
   }),
 );
@@ -593,15 +568,8 @@ r.get(
         .limit(limit),
       Post.countDocuments(q),
     ]);
-    const listed = items.map(publicPost);
-    if (req.query.status !== "all")
-      listed.forEach((post) => {
-        delete post.content;
-        delete post.faqs;
-        delete post.keyTakeaways;
-      });
     res.json({
-      items: listed,
+      items: items.map(publicPost),
       total,
       page,
       pages: Math.ceil(total / limit),
@@ -627,22 +595,7 @@ r.get(
       ...(req.query.preview === "true" ? {} : { status: "published" }),
     }).populate("category");
     if (!p) return res.status(404).json({ error: "Post not found" });
-    const result = publicPost(p),
-      paywall = await getPaywall(p.id);
-    const unlocked = !paywall.enabled || (await hasAccess(req, p.id));
-    if (!unlocked) {
-      const text = String(result.content || "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .split(" ")
-        .slice(0, paywall.previewWords)
-        .join(" ");
-      result.content = `<p>${text.replace(/[&<>]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[character])}…</p>`;
-      result.keyTakeaways = [];
-      result.faqs = [];
-    }
-    res.json({ ...result, paywall: { ...paywall, unlocked } });
+    res.json(publicPost(p));
   }),
 );
 r.post(
@@ -783,6 +736,7 @@ r.put(
   ),
 );
 
+/* Payment gateway removed. Historical route source retained temporarily for migration context.
 const paymentInput = z.object({
   postId: z.string().trim(),
   email: z.string().trim().email().max(180),
@@ -1179,6 +1133,7 @@ r.get(
     });
   }),
 );
+*/
 r.post(
   "/media/upload",
   auth,

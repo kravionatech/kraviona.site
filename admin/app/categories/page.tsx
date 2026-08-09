@@ -1,4 +1,149 @@
-'use client';
-import {useEffect,useState} from 'react';import {call} from '../../lib/api';
-const blank={name:'',slug:'',description:'',seo:{metaTitle:'',metaDescription:''}};
-export default function Categories(){const[x,setX]=useState<any[]>([]),[edit,setEdit]=useState<any>(blank),[msg,setMsg]=useState('');const load=()=>call('/categories').then(setX);useEffect(()=>{load()},[]);async function save(){try{await call(edit._id?`/categories/${edit._id}`:'/categories',{method:edit._id?'PUT':'POST',body:JSON.stringify(edit)});setEdit(blank);setMsg('Category saved.');load()}catch(e:any){setMsg(e.message)}}return <><div className="top"><div><span className="page-kicker">Taxonomy</span><h1>Categories</h1><p className="muted">Organize stories and category landing pages.</p></div><button onClick={()=>setEdit(blank)}>+ New category</button></div>{msg&&<div className="notice">{msg}</div>}<div className="category-admin"><div className="data-panel category-list">{x.map(c=><button className={edit._id===c._id?'active':''} onClick={()=>setEdit({...c,seo:{metaTitle:'',metaDescription:'',...c.seo}})} key={c._id}><span><b>{c.name}</b><small>/{c.slug}</small></span><span>→</span></button>)}</div><section className="edit-card category-editor"><div className="card-heading"><div><h2>{edit._id?'Edit category':'New category'}</h2><p>Changes appear in frontend navigation automatically.</p></div></div><label>Name<input value={edit.name} onChange={e=>setEdit({...edit,name:e.target.value})}/></label><label>Slug<input value={edit.slug||''} onChange={e=>setEdit({...edit,slug:e.target.value})} placeholder="generated-from-name"/></label><label>Description<textarea rows={4} value={edit.description||''} onChange={e=>setEdit({...edit,description:e.target.value})}/></label><label>SEO title <small>{edit.seo?.metaTitle?.length||0}/60</small><input maxLength={60} value={edit.seo?.metaTitle||''} onChange={e=>setEdit({...edit,seo:{...edit.seo,metaTitle:e.target.value}})}/></label><label>Meta description <small>{edit.seo?.metaDescription?.length||0}/160</small><textarea rows={3} maxLength={160} value={edit.seo?.metaDescription||''} onChange={e=>setEdit({...edit,seo:{...edit.seo,metaDescription:e.target.value}})}/></label><div className="editor-actions"><button onClick={save}>Save category</button>{edit._id&&<button className="danger ghost-btn" onClick={async()=>{if(confirm('Delete this category?'))try{await call(`/categories/${edit._id}`,{method:'DELETE'});setEdit(blank);load()}catch(e:any){setMsg(e.message)}}}>Delete</button>}</div></section></div></>}
+"use client";
+import { useEffect, useState } from "react";
+import { call } from "../../lib/api";
+const blank = {
+  name: "",
+  slug: "",
+  description: "",
+  seo: { metaTitle: "", metaDescription: "" },
+};
+export default function Categories() {
+  const [x, setX] = useState<any[]>([]),
+    [edit, setEdit] = useState<any>(blank),
+    [msg, setMsg] = useState("");
+  const load = () => call("/categories").then(setX);
+  useEffect(() => {
+    load();
+  }, []);
+  async function save() {
+    try {
+      await call(edit._id ? `/categories/${edit._id}` : "/categories", {
+        method: edit._id ? "PUT" : "POST",
+        body: JSON.stringify(edit),
+      });
+      setEdit(blank);
+      setMsg("Category saved.");
+      load();
+    } catch (e: any) {
+      setMsg(e.message);
+    }
+  }
+  return (
+    <>
+      <div className="top">
+        <div>
+          <span className="page-kicker">Taxonomy</span>
+          <h1>Categories</h1>
+          <p className="muted">Organize stories and category landing pages.</p>
+        </div>
+        <button onClick={() => setEdit(blank)}>+ New category</button>
+      </div>
+      {msg && <div className="notice">{msg}</div>}
+      <div className="category-admin">
+        <div className="data-panel category-list">
+          {x.map((c) => (
+            <button
+              className={edit._id === c._id ? "active" : ""}
+              onClick={() =>
+                setEdit({
+                  ...c,
+                  seo: { metaTitle: "", metaDescription: "", ...c.seo },
+                })
+              }
+              key={c._id}
+            >
+              <span>
+                <b>{c.name}</b>
+                <small>/{c.slug}</small>
+              </span>
+              <span>→</span>
+            </button>
+          ))}
+        </div>
+        <section className="edit-card category-editor">
+          <div className="card-heading">
+            <div>
+              <h2>{edit._id ? "Edit category" : "New category"}</h2>
+              <p>Changes appear in frontend navigation automatically.</p>
+            </div>
+          </div>
+          <label>
+            Name
+            <input
+              value={edit.name}
+              onChange={(e) => setEdit({ ...edit, name: e.target.value })}
+            />
+          </label>
+          <label>
+            Slug
+            <input
+              value={edit.slug || ""}
+              onChange={(e) => setEdit({ ...edit, slug: e.target.value })}
+              placeholder="generated-from-name"
+            />
+          </label>
+          <label>
+            Description
+            <textarea
+              rows={4}
+              value={edit.description || ""}
+              onChange={(e) =>
+                setEdit({ ...edit, description: e.target.value })
+              }
+            />
+          </label>
+          <label>
+            SEO title <small>{edit.seo?.metaTitle?.length || 0}/60</small>
+            <input
+              maxLength={60}
+              value={edit.seo?.metaTitle || ""}
+              onChange={(e) =>
+                setEdit({
+                  ...edit,
+                  seo: { ...edit.seo, metaTitle: e.target.value },
+                })
+              }
+            />
+          </label>
+          <label>
+            Meta description{" "}
+            <small>{edit.seo?.metaDescription?.length || 0}/160</small>
+            <textarea
+              rows={3}
+              maxLength={160}
+              value={edit.seo?.metaDescription || ""}
+              onChange={(e) =>
+                setEdit({
+                  ...edit,
+                  seo: { ...edit.seo, metaDescription: e.target.value },
+                })
+              }
+            />
+          </label>
+          <div className="editor-actions">
+            <button onClick={save}>Save category</button>
+            {edit._id && (
+              <button
+                className="danger ghost-btn"
+                onClick={async () => {
+                  if (confirm("Delete this category?"))
+                    try {
+                      await call(`/categories/${edit._id}`, {
+                        method: "DELETE",
+                      });
+                      setEdit(blank);
+                      load();
+                    } catch (e: any) {
+                      setMsg(e.message);
+                    }
+                }}
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}

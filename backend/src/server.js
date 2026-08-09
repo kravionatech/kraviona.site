@@ -56,15 +56,7 @@ app.use(
     maxAge: 86400,
   }),
 );
-app.use(
-  express.json({
-    limit: "10mb",
-    verify: (req, _res, buffer) => {
-      if (req.originalUrl === "/api/webhooks/razorpay")
-        req.rawBody = buffer.toString("utf8");
-    },
-  }),
-);
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use((_, res, next) => {
   res.set("X-Robots-Tag", "noindex, nofollow");

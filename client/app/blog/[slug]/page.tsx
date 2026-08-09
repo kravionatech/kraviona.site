@@ -15,7 +15,6 @@ import {
 } from "../../../lib/site";
 import PostCard from "../../../components/PostCard";
 import Comments from "./comments";
-import PaywallGate from "../../../components/PaywallGate";
 import { DisplayAd, DirectLinkAd } from "../../../components/ads";
 
 export async function generateMetadata({
@@ -278,7 +277,10 @@ export default async function PostPage({
             <DisplayAd size="160x300" />
           </aside>
           <div>
-            <PaywallGate post={p} />
+            <div
+              className="article-body"
+              dangerouslySetInnerHTML={{ __html: p.content }}
+            />
             <DisplayAd size="300x250" className="article-inline-ad" />
             <DisplayAd
               size="320x50"

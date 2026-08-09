@@ -1,2 +1,186 @@
-'use client';import {useEffect,useState} from 'react';import {call} from '../../lib/api';
-export default function AIWorkspace(){const[cats,setCats]=useState<any[]>([]),[queue,setQueue]=useState<any[]>([]),[message,setMessage]=useState(''),[generating,setGenerating]=useState(false),[created,setCreated]=useState<any>();const load=()=>Promise.all([call('/categories'),call('/keyword-queue')]).then(([c,q])=>{setCats(c);setQueue(q)});useEffect(()=>{load().catch(()=>{})},[]);async function generate(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setGenerating(true);setCreated(null);setMessage('Claude is researching and structuring the story. This can take a minute…');try{const p=await call('/ai-agent/generate',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.currentTarget)))});setCreated(p);setMessage('Draft generated successfully. Review every claim before publishing.')}catch(e:any){setMessage(e.message)}finally{setGenerating(false)}}return <><div className="top"><div><span className="page-kicker">AI workspace</span><h1>Generate with direction.</h1><p className="muted">Create a structured first draft, then refine it in the full editor.</p></div></div><div className="settings-grid"><section className="edit-card"><div className="card-heading"><div><h2>New AI draft</h2><p>Be specific about audience, angle, and search intent.</p></div><span>Always saves as draft</span></div><form onSubmit={generate}><label>Topic and editorial direction<textarea name="topic" rows={6} required placeholder="Example: A practical guide for early-stage SaaS founders on building an organic growth loop. Focus on retention before acquisition and include measurable examples."/></label><label>Primary category<select name="category" required><option value="">Choose category</option>{cats.map(c=><option value={c._id} key={c._id}>{c.name}</option>)}</select></label><button disabled={generating}>{generating?'Generating draft…':'✦ Generate complete draft'}</button></form>{message&&<div className="notice">{message}{created&&<div><br/><a className="btn" href={`/posts/${created._id}`}>Open “{created.title}” in editor →</a></div>}</div>}</section><section className="edit-card"><div className="card-heading"><div><h2>Automation queue</h2><p>Highest priority pending keyword is used first.</p></div></div><form className="queue-form" onSubmit={async e=>{e.preventDefault();await call('/keyword-queue',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.currentTarget)))});e.currentTarget.reset();load()}}><label>Keyword<input name="keyword" required placeholder="Target keyword or topic"/></label><div className="two-cols"><label>Category<select name="targetCategory" required><option value="">Choose</option>{cats.map(c=><option value={c._id} key={c._id}>{c.name}</option>)}</select></label><label>Priority<input name="priority" type="number" min="0" defaultValue="0"/></label></div><button className="ghost-btn">Add to queue</button></form><div className="queue-list">{queue.length===0?<p className="muted">No keywords queued.</p>:queue.map(q=><div className="row" key={q._id}><span><b>{q.keyword}</b><small className="table-sub">{q.targetCategory?.name||'No category'} · Priority {q.priority}</small></span><span className={`status status-${q.status==='used'?'published':'draft'}`}>{q.status}</span><button className="ghost-btn danger" onClick={async()=>{await call(`/keyword-queue/${q._id}`,{method:'DELETE'});load()}}>×</button></div>)}</div></section></div></>}
+"use client";
+import { useEffect, useState } from "react";
+import { call } from "../../lib/api";
+export default function AIWorkspace() {
+  const [cats, setCats] = useState<any[]>([]),
+    [queue, setQueue] = useState<any[]>([]),
+    [message, setMessage] = useState(""),
+    [generating, setGenerating] = useState(false),
+    [created, setCreated] = useState<any>();
+  const load = () =>
+    Promise.all([call("/categories"), call("/keyword-queue")]).then(
+      ([c, q]) => {
+        setCats(c);
+        setQueue(q);
+      },
+    );
+  useEffect(() => {
+    load().catch(() => {});
+  }, []);
+  async function generate(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setGenerating(true);
+    setCreated(null);
+    setMessage(
+      "Claude is researching and structuring the story. This can take a minute…",
+    );
+    try {
+      const p = await call("/ai-agent/generate", {
+        method: "POST",
+        body: JSON.stringify(Object.fromEntries(new FormData(e.currentTarget))),
+      });
+      setCreated(p);
+      setMessage(
+        "Draft generated successfully. Review every claim before publishing.",
+      );
+    } catch (e: any) {
+      setMessage(e.message);
+    } finally {
+      setGenerating(false);
+    }
+  }
+  return (
+    <>
+      <div className="top">
+        <div>
+          <span className="page-kicker">AI workspace</span>
+          <h1>Generate with direction.</h1>
+          <p className="muted">
+            Create a structured first draft, then refine it in the full editor.
+          </p>
+        </div>
+      </div>
+      <div className="settings-grid">
+        <section className="edit-card">
+          <div className="card-heading">
+            <div>
+              <h2>New AI draft</h2>
+              <p>Be specific about audience, angle, and search intent.</p>
+            </div>
+            <span>Always saves as draft</span>
+          </div>
+          <form onSubmit={generate}>
+            <label>
+              Topic and editorial direction
+              <textarea
+                name="topic"
+                rows={6}
+                required
+                placeholder="Example: A practical guide for early-stage SaaS founders on building an organic growth loop. Focus on retention before acquisition and include measurable examples."
+              />
+            </label>
+            <label>
+              Primary category
+              <select name="category" required>
+                <option value="">Choose category</option>
+                {cats.map((c) => (
+                  <option value={c._id} key={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button disabled={generating}>
+              {generating ? "Generating draft…" : "✦ Generate complete draft"}
+            </button>
+          </form>
+          {message && (
+            <div className="notice">
+              {message}
+              {created && (
+                <div>
+                  <br />
+                  <a className="btn" href={`/posts/${created._id}`}>
+                    Open “{created.title}” in editor →
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+        <section className="edit-card">
+          <div className="card-heading">
+            <div>
+              <h2>Automation queue</h2>
+              <p>Highest priority pending keyword is used first.</p>
+            </div>
+          </div>
+          <form
+            className="queue-form"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await call("/keyword-queue", {
+                method: "POST",
+                body: JSON.stringify(
+                  Object.fromEntries(new FormData(e.currentTarget)),
+                ),
+              });
+              e.currentTarget.reset();
+              load();
+            }}
+          >
+            <label>
+              Keyword
+              <input
+                name="keyword"
+                required
+                placeholder="Target keyword or topic"
+              />
+            </label>
+            <div className="two-cols">
+              <label>
+                Category
+                <select name="targetCategory" required>
+                  <option value="">Choose</option>
+                  {cats.map((c) => (
+                    <option value={c._id} key={c._id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Priority
+                <input name="priority" type="number" min="0" defaultValue="0" />
+              </label>
+            </div>
+            <button className="ghost-btn">Add to queue</button>
+          </form>
+          <div className="queue-list">
+            {queue.length === 0 ? (
+              <p className="muted">No keywords queued.</p>
+            ) : (
+              queue.map((q) => (
+                <div className="row" key={q._id}>
+                  <span>
+                    <b>{q.keyword}</b>
+                    <small className="table-sub">
+                      {q.targetCategory?.name || "No category"} · Priority{" "}
+                      {q.priority}
+                    </small>
+                  </span>
+                  <span
+                    className={`status status-${q.status === "used" ? "published" : "draft"}`}
+                  >
+                    {q.status}
+                  </span>
+                  <button
+                    className="ghost-btn danger"
+                    onClick={async () => {
+                      await call(`/keyword-queue/${q._id}`, {
+                        method: "DELETE",
+                      });
+                      load();
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}

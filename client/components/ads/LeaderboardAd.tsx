@@ -1,7 +1,9 @@
-import DisplayAd from './DisplayAd';
+import DisplayAd from "./DisplayAd";
 
-interface LeaderboardAdProps { className?: string; }
+interface LeaderboardAdProps {
+  className?: string;
+}
 
-export default function LeaderboardAd({ className = '' }: LeaderboardAdProps) {
+export default function LeaderboardAd({ className = "" }: LeaderboardAdProps) {
   return <DisplayAd size="728x90" className={className} />;
 }

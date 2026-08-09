@@ -172,6 +172,15 @@ export default function Editor() {
   const words = useMemo(() => wordCount(form.content), [form.content]),
     links = useMemo(() => countExternalLinks(form.content), [form.content]),
     limit = me?.backlinkLimit || 0;
+  const publicationChecks = [
+    { label: "Descriptive title", complete: form.title.trim().length >= 10 },
+    { label: "Category selected", complete: Boolean(form.category) },
+    { label: "Minimum 300 words", complete: words >= 300 },
+    { label: "Links within allowance", complete: links <= limit },
+  ];
+  const completedChecks = publicationChecks.filter(
+    (check) => check.complete,
+  ).length;
   if (loading)
     return (
       <main className="shell">
@@ -240,424 +249,509 @@ export default function Editor() {
       </main>
     );
   return (
-    <main className="shell">
-      <header className="top">
-        <div>
-          <div className="brand">
-            kraviona<span>.</span> editor
-          </div>
-          <p className="eyebrow">Publishing workspace</p>
-          <h1>Write with confidence.</h1>
-          <p className="muted">
-            Articles publish directly to the public journal—there is no review
-            queue.
-          </p>
+    <div className="editor-app">
+      <aside className="app-sidebar">
+        <a className="brand" href="#overview" aria-label="Kraviona editor home">
+          kraviona<span>.</span>
+          <small>Editor</small>
+        </a>
+        <p className="nav-label">Workspace</p>
+        <nav className="editor-nav" aria-label="Editor navigation">
+          <a className="active" href="#overview">
+            <span>01</span> Overview
+          </a>
+          <a href="#compose">
+            <span>02</span> New article
+          </a>
+          <a href="#articles">
+            <span>03</span> My articles
+          </a>
+          <a href={SITE_URL} target="_blank" rel="noreferrer">
+            <span>↗</span> View website
+          </a>
+        </nav>
+        <div className="sidebar-access">
+          <span className="live-dot" />
+          <b>Direct publishing</b>
+          <p>Your approved stories go live immediately.</p>
         </div>
-        <button
-          className="ghost"
-          onClick={async () => {
-            await call("/auth/logout", { method: "POST" });
-            setLogin(true);
-          }}
+        <div className="editor-profile">
+          <div className="avatar">
+            {me?.name?.charAt(0)?.toUpperCase() || "E"}
+          </div>
+          <div>
+            <b>{me?.name || "Editor"}</b>
+            <span>{me?.email}</span>
+          </div>
+          <button
+            aria-label="Sign out"
+            title="Sign out"
+            onClick={async () => {
+              await call("/auth/logout", { method: "POST" });
+              setLogin(true);
+            }}
+          >
+            ↪
+          </button>
+        </div>
+      </aside>
+      <main className="shell">
+        <header className="top" id="overview">
+          <div>
+            <p className="eyebrow">Editorial dashboard</p>
+            <h1>Your publishing workspace</h1>
+            <p className="muted">
+              Welcome back, {me?.name?.split(" ")[0] || "Editor"}. Create,
+              optimise and publish stories from one place.
+            </p>
+          </div>
+          <div className="top-actions">
+            <a
+              className="ghost button-link"
+              href={SITE_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View site ↗
+            </a>
+            <a className="button-link" href="#compose">
+              + Create story
+            </a>
+          </div>
+        </header>
+        {notice && (
+          <div className={`notice ${notice.type}`} role="status">
+            {notice.text}
+          </div>
+        )}
+        <section
+          className="dashboard-grid"
+          aria-label="Editor dashboard summary"
         >
-          Sign out
-        </button>
-      </header>
-      {notice && (
-        <div className={`notice ${notice.type}`} role="status">
-          {notice.text}
-        </div>
-      )}
-      <section className="dashboard-grid" aria-label="Editor dashboard summary">
-        <div className="metric-card">
-          <span>My stories</span>
-          <b>{posts.length}</b>
-          <small>Only your articles</small>
-        </div>
-        <div className="metric-card">
-          <span>Published</span>
-          <b>{posts.filter((post) => post.status === "published").length}</b>
-          <small>Live on Kraviona</small>
-        </div>
-        <div className="metric-card">
-          <span>Drafts</span>
-          <b>{posts.filter((post) => post.status === "draft").length}</b>
-          <small>Private workspace</small>
-        </div>
-        <div className="metric-card">
-          <span>Link allowance</span>
-          <b>{limit}</b>
-          <small>Per article</small>
-        </div>
-      </section>
-      <div className="workspace">
-        <section className="panel composer">
-          <div className="section-head">
-            <div>
-              <h2>New article</h2>
-              <p className="muted">
-                Use the rich-text tools to structure an easy-to-read article.
-              </p>
-            </div>
-            <span className="save-state">
-              {saving ? "Publishing…" : "Ready"}
-            </span>
+          <div className="metric-card">
+            <span>My stories</span>
+            <b>{posts.length}</b>
+            <small>Only your articles</small>
           </div>
-          <label>
-            Article title
-            <input
-              value={form.title}
-              maxLength={120}
-              onChange={(event) =>
-                setForm({ ...form, title: event.target.value })
-              }
-              placeholder="A clear, useful article title"
-            />
-          </label>
-          <div className="two-cols">
+          <div className="metric-card">
+            <span>Published</span>
+            <b>{posts.filter((post) => post.status === "published").length}</b>
+            <small>Live on Kraviona</small>
+          </div>
+          <div className="metric-card">
+            <span>Drafts</span>
+            <b>{posts.filter((post) => post.status === "draft").length}</b>
+            <small>Private workspace</small>
+          </div>
+          <div className="metric-card">
+            <span>Link allowance</span>
+            <b>{limit}</b>
+            <small>Per article</small>
+          </div>
+        </section>
+        <div className="workspace" id="compose">
+          <section className="panel composer">
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">Story composer</p>
+                <h2>Create a new article</h2>
+                <p className="muted">
+                  Shape your idea into a clear, useful story for Kraviona
+                  readers.
+                </p>
+              </div>
+              <span className="save-state">
+                {saving ? "Publishing…" : "Ready"}
+              </span>
+            </div>
             <label>
-              Category
-              <select
-                value={form.category}
-                onChange={(event) =>
-                  setForm({ ...form, category: event.target.value })
-                }
-              >
-                <option value="">Choose a category</option>
-                {cats.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Reader summary <small>{form.excerpt.length}/300</small>
+              Article title
               <input
-                value={form.excerpt}
-                maxLength={300}
+                value={form.title}
+                maxLength={120}
                 onChange={(event) =>
-                  setForm({ ...form, excerpt: event.target.value })
+                  setForm({ ...form, title: event.target.value })
                 }
-                placeholder="What will readers learn?"
+                placeholder="A clear, useful article title"
               />
             </label>
-          </div>
-          <TiptapEditor
-            content={form.content}
-            onChange={(content) =>
-              setForm((current) => ({ ...current, content }))
-            }
-            maxWords={2500}
-          />
-          <div className="editor-sections">
-            <section className="sub-panel">
-              <div className="section-head">
-                <div>
-                  <h3>Story details</h3>
-                  <p className="muted">
-                    Organise the article like an administrator-created story.
-                  </p>
-                </div>
-              </div>
+            <div className="two-cols">
               <label>
-                Tags <small>Maximum 12</small>
-                <input
-                  value={form.tags.join(", ")}
+                Category
+                <select
+                  value={form.category}
                   onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      tags: event.target.value
-                        .split(",")
-                        .map((tag) => tag.trim())
-                        .filter(Boolean)
-                        .slice(0, 12),
-                    }))
-                  }
-                  placeholder="AI, technology, strategy"
-                />
-              </label>
-              <label>
-                Key takeaways <small>One per line</small>
-                <textarea
-                  rows={4}
-                  value={form.keyTakeaways.join("\n")}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      keyTakeaways: event.target.value
-                        .split("\n")
-                        .map((item) => item.trim())
-                        .filter(Boolean)
-                        .slice(0, 8),
-                    }))
-                  }
-                  placeholder="A concise, actionable takeaway"
-                />
-              </label>
-            </section>
-            <section className="sub-panel">
-              <div className="section-head">
-                <div>
-                  <h3>Featured image</h3>
-                  <p className="muted">
-                    Used on cards, the article hero and social previews.
-                  </p>
-                </div>
-              </div>
-              <label>
-                Image URL
-                <input
-                  type="url"
-                  value={form.featuredImage.url}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      featuredImage: {
-                        ...current.featuredImage,
-                        url: event.target.value,
-                      },
-                    }))
-                  }
-                  placeholder="https://…"
-                />
-              </label>
-              <label>
-                Accessible alt text
-                <input
-                  value={form.featuredImage.alt}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      featuredImage: {
-                        ...current.featuredImage,
-                        alt: event.target.value,
-                      },
-                    }))
-                  }
-                  placeholder="Describe the image"
-                />
-              </label>
-              {form.featuredImage.url && (
-                <img
-                  className="featured-preview"
-                  src={form.featuredImage.url}
-                  alt={form.featuredImage.alt || "Featured preview"}
-                />
-              )}
-            </section>
-            <section className="sub-panel seo-panel">
-              <div className="section-head">
-                <div>
-                  <h3>SEO & sharing</h3>
-                  <p className="muted">
-                    Canonical URL and indexing are controlled safely by
-                    Kraviona.
-                  </p>
-                </div>
-              </div>
-              <label>
-                SEO title <small>{form.seo.metaTitle.length}/60</small>
-                <input
-                  maxLength={60}
-                  value={form.seo.metaTitle}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      seo: { ...current.seo, metaTitle: event.target.value },
-                    }))
-                  }
-                  placeholder={form.title || "Search result title"}
-                />
-              </label>
-              <label>
-                Meta description{" "}
-                <small>{form.seo.metaDescription.length}/160</small>
-                <textarea
-                  rows={3}
-                  maxLength={160}
-                  value={form.seo.metaDescription}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      seo: {
-                        ...current.seo,
-                        metaDescription: event.target.value,
-                      },
-                    }))
-                  }
-                  placeholder={form.excerpt || "Search and sharing description"}
-                />
-              </label>
-              <label>
-                Custom social image URL
-                <input
-                  type="url"
-                  value={form.seo.ogImage}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      seo: { ...current.seo, ogImage: event.target.value },
-                    }))
-                  }
-                  placeholder="Defaults to featured image"
-                />
-              </label>
-            </section>
-            <section className="sub-panel seo-panel">
-              <div className="section-head">
-                <div>
-                  <h3>Frequently asked questions</h3>
-                  <p className="muted">
-                    Optional FAQs appear on the article and in structured data.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() =>
-                    setForm((current) => ({
-                      ...current,
-                      faqs: [
-                        ...current.faqs,
-                        { question: "", answer: "" },
-                      ].slice(0, 10),
-                    }))
+                    setForm({ ...form, category: event.target.value })
                   }
                 >
-                  + Add FAQ
-                </button>
-              </div>
-              {form.faqs.map((faq, index) => (
-                <div className="faq-row" key={index}>
+                  <option value="">Choose a category</option>
+                  {cats.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Reader summary <small>{form.excerpt.length}/300</small>
+                <input
+                  value={form.excerpt}
+                  maxLength={300}
+                  onChange={(event) =>
+                    setForm({ ...form, excerpt: event.target.value })
+                  }
+                  placeholder="What will readers learn?"
+                />
+              </label>
+            </div>
+            <TiptapEditor
+              content={form.content}
+              onChange={(content) =>
+                setForm((current) => ({ ...current, content }))
+              }
+              maxWords={2500}
+            />
+            <div className="editor-sections">
+              <section className="sub-panel">
+                <div className="section-head">
+                  <div>
+                    <h3>Story details</h3>
+                    <p className="muted">
+                      Organise the article like an administrator-created story.
+                    </p>
+                  </div>
+                </div>
+                <label>
+                  Tags <small>Maximum 12</small>
                   <input
-                    value={faq.question}
+                    value={form.tags.join(", ")}
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        faqs: current.faqs.map((item, itemIndex) =>
-                          itemIndex === index
-                            ? { ...item, question: event.target.value }
-                            : item,
-                        ),
+                        tags: event.target.value
+                          .split(",")
+                          .map((tag) => tag.trim())
+                          .filter(Boolean)
+                          .slice(0, 12),
                       }))
                     }
-                    placeholder="Question"
+                    placeholder="AI, technology, strategy"
                   />
+                </label>
+                <label>
+                  Key takeaways <small>One per line</small>
                   <textarea
-                    rows={2}
-                    value={faq.answer}
+                    rows={4}
+                    value={form.keyTakeaways.join("\n")}
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        faqs: current.faqs.map((item, itemIndex) =>
-                          itemIndex === index
-                            ? { ...item, answer: event.target.value }
-                            : item,
-                        ),
+                        keyTakeaways: event.target.value
+                          .split("\n")
+                          .map((item) => item.trim())
+                          .filter(Boolean)
+                          .slice(0, 8),
                       }))
                     }
-                    placeholder="Direct answer"
+                    placeholder="A concise, actionable takeaway"
                   />
+                </label>
+              </section>
+              <section className="sub-panel">
+                <div className="section-head">
+                  <div>
+                    <h3>Featured image</h3>
+                    <p className="muted">
+                      Used on cards, the article hero and social previews.
+                    </p>
+                  </div>
+                </div>
+                <label>
+                  Image URL
+                  <input
+                    type="url"
+                    value={form.featuredImage.url}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        featuredImage: {
+                          ...current.featuredImage,
+                          url: event.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="https://…"
+                  />
+                </label>
+                <label>
+                  Accessible alt text
+                  <input
+                    value={form.featuredImage.alt}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        featuredImage: {
+                          ...current.featuredImage,
+                          alt: event.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Describe the image"
+                  />
+                </label>
+                {form.featuredImage.url && (
+                  <img
+                    className="featured-preview"
+                    src={form.featuredImage.url}
+                    alt={form.featuredImage.alt || "Featured preview"}
+                  />
+                )}
+              </section>
+              <section className="sub-panel seo-panel">
+                <div className="section-head">
+                  <div>
+                    <h3>SEO & sharing</h3>
+                    <p className="muted">
+                      Canonical URL and indexing are controlled safely by
+                      Kraviona.
+                    </p>
+                  </div>
+                </div>
+                <label>
+                  SEO title <small>{form.seo.metaTitle.length}/60</small>
+                  <input
+                    maxLength={60}
+                    value={form.seo.metaTitle}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        seo: { ...current.seo, metaTitle: event.target.value },
+                      }))
+                    }
+                    placeholder={form.title || "Search result title"}
+                  />
+                </label>
+                <label>
+                  Meta description{" "}
+                  <small>{form.seo.metaDescription.length}/160</small>
+                  <textarea
+                    rows={3}
+                    maxLength={160}
+                    value={form.seo.metaDescription}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        seo: {
+                          ...current.seo,
+                          metaDescription: event.target.value,
+                        },
+                      }))
+                    }
+                    placeholder={
+                      form.excerpt || "Search and sharing description"
+                    }
+                  />
+                </label>
+                <label>
+                  Custom social image URL
+                  <input
+                    type="url"
+                    value={form.seo.ogImage}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        seo: { ...current.seo, ogImage: event.target.value },
+                      }))
+                    }
+                    placeholder="Defaults to featured image"
+                  />
+                </label>
+              </section>
+              <section className="sub-panel seo-panel">
+                <div className="section-head">
+                  <div>
+                    <h3>Frequently asked questions</h3>
+                    <p className="muted">
+                      Optional FAQs appear on the article and in structured
+                      data.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    className="remove-faq"
+                    className="ghost"
                     onClick={() =>
                       setForm((current) => ({
                         ...current,
-                        faqs: current.faqs.filter(
-                          (_, itemIndex) => itemIndex !== index,
-                        ),
+                        faqs: [
+                          ...current.faqs,
+                          { question: "", answer: "" },
+                        ].slice(0, 10),
                       }))
                     }
                   >
-                    Remove
+                    + Add FAQ
                   </button>
                 </div>
-              ))}
-              {!form.faqs.length && <p className="muted">No FAQs added.</p>}
-            </section>
-          </div>
-          <div className="metrics">
-            <span>{words} / 300 words minimum</span>
-            <span className={links > limit ? "danger-text" : ""}>
-              {links} / {limit} external links
-            </span>
-          </div>
-          <div className="publish-actions">
-            <button
-              className="ghost"
-              disabled={saving}
-              onClick={() => publish("draft")}
-            >
-              Save draft
-            </button>
-            <button disabled={saving} onClick={() => publish("published")}>
-              {saving ? "Publishing…" : "Publish now"}
-            </button>
-          </div>
-        </section>
-        <aside className="sidebar">
-          <section className="panel">
-            <p className="eyebrow">Your publishing access</p>
-            <h2>
-              {limit} external link{limit === 1 ? "" : "s"}
-            </h2>
-            <p className="muted">
-              Your current per-article allowance. Internal Kraviona links do not
-              count.
-            </p>
+                {form.faqs.map((faq, index) => (
+                  <div className="faq-row" key={index}>
+                    <input
+                      value={faq.question}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          faqs: current.faqs.map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, question: event.target.value }
+                              : item,
+                          ),
+                        }))
+                      }
+                      placeholder="Question"
+                    />
+                    <textarea
+                      rows={2}
+                      value={faq.answer}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          faqs: current.faqs.map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, answer: event.target.value }
+                              : item,
+                          ),
+                        }))
+                      }
+                      placeholder="Direct answer"
+                    />
+                    <button
+                      type="button"
+                      className="remove-faq"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          faqs: current.faqs.filter(
+                            (_, itemIndex) => itemIndex !== index,
+                          ),
+                        }))
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                {!form.faqs.length && <p className="muted">No FAQs added.</p>}
+              </section>
+            </div>
           </section>
-          <section className="panel guide">
-            <h3>Publication checks</h3>
-            <ul>
-              <li>Use a meaningful title and category.</li>
-              <li>Write at least 300 words.</li>
-              <li>Keep links helpful and within your allowance.</li>
-              <li>Publishing makes the article public immediately.</li>
-            </ul>
-          </section>
-        </aside>
-      </div>
-      <section className="panel articles">
-        <div className="section-head">
-          <div>
-            <h2>My articles</h2>
-            <p className="muted">Your saved drafts and published work.</p>
-          </div>
-          <span>{posts.length} total</span>
-        </div>
-        {posts.length ? (
-          posts.map((post) => (
-            <div className="row" key={post._id}>
-              <div>
-                <b>{post.title}</b>
-                <span className="muted">
-                  {post.category?.name || "Uncategorised"} ·{" "}
-                  {post.backlinkCount || 0} external links ·{" "}
-                  {new Date(post.createdAt).toLocaleDateString()}
+          <aside className="sidebar">
+            <section className="panel publish-card">
+              <div className="publish-card-head">
+                <div>
+                  <p className="eyebrow">Publish readiness</p>
+                  <h3>
+                    {completedChecks === 4
+                      ? "Ready to publish"
+                      : "Complete your story"}
+                  </h3>
+                </div>
+                <span>{completedChecks}/4</span>
+              </div>
+              <div
+                className="progress-track"
+                aria-label={`${completedChecks} of 4 checks complete`}
+              >
+                <span style={{ width: `${completedChecks * 25}%` }} />
+              </div>
+              <ul className="check-list">
+                {publicationChecks.map((check) => (
+                  <li
+                    className={check.complete ? "complete" : ""}
+                    key={check.label}
+                  >
+                    <span>{check.complete ? "✓" : ""}</span>
+                    {check.label}
+                  </li>
+                ))}
+              </ul>
+              <div className="publish-card-metrics">
+                <span>
+                  <b>{words}</b> words
+                </span>
+                <span className={links > limit ? "danger-text" : ""}>
+                  <b>
+                    {links}/{limit}
+                  </b>{" "}
+                  links
                 </span>
               </div>
-              <div className="row-right">
-                <span className={`status ${post.status}`}>{post.status}</span>
-                {post.status === "published" && (
-                  <a
-                    target="_blank"
-                    rel="noreferrer"
-                    href={`${SITE_URL}/blog/${post.slug}`}
-                  >
-                    View live ↗
-                  </a>
-                )}
+              <div className="publish-actions publish-actions--side">
+                <button
+                  className="ghost"
+                  disabled={saving}
+                  onClick={() => publish("draft")}
+                >
+                  Save draft
+                </button>
+                <button disabled={saving} onClick={() => publish("published")}>
+                  {saving ? "Publishing…" : "Publish now"}
+                </button>
               </div>
+              <small className="publish-note">
+                Publishing makes this article public immediately.
+              </small>
+            </section>
+            <section className="panel allowance-card">
+              <div className="allowance-icon">↗</div>
+              <div>
+                <span>External link allowance</span>
+                <h3>
+                  {limit} link{limit === 1 ? "" : "s"} per article
+                </h3>
+                <p>Internal Kraviona links never count against this limit.</p>
+              </div>
+            </section>
+          </aside>
+        </div>
+        <section className="panel articles" id="articles">
+          <div className="section-head">
+            <div>
+              <h2>My articles</h2>
+              <p className="muted">Your saved drafts and published work.</p>
             </div>
-          ))
-        ) : (
-          <p className="muted">
-            No articles yet. Your first published article will appear here.
-          </p>
-        )}
-      </section>
-    </main>
+            <span>{posts.length} total</span>
+          </div>
+          {posts.length ? (
+            posts.map((post) => (
+              <div className="row" key={post._id}>
+                <div>
+                  <b>{post.title}</b>
+                  <span className="muted">
+                    {post.category?.name || "Uncategorised"} ·{" "}
+                    {post.backlinkCount || 0} external links ·{" "}
+                    {new Date(post.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="row-right">
+                  <span className={`status ${post.status}`}>{post.status}</span>
+                  {post.status === "published" && (
+                    <a
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`${SITE_URL}/blog/${post.slug}`}
+                    >
+                      View live ↗
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="muted">
+              No articles yet. Your first published article will appear here.
+            </p>
+          )}
+        </section>
+      </main>
+    </div>
   );
 }

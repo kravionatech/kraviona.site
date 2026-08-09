@@ -11,7 +11,6 @@ const adminLinks = [
   ["↗", "Client enquiries", "/inquiries"],
   ["◌", "Moderation", "/comments"],
   ["◎", "Audience", "/subscribers"],
-  ["₹", "Payments", "/payments"],
   ["⌁", "Crawlers & AI", "/crawlers"],
   ["♙", "Users", "/users"],
   ["⚙", "Site settings", "/settings"],

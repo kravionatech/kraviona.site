@@ -1,25 +1,27 @@
-'use client';
+"use client";
 
 interface DirectLinkAdProps {
   title?: string;
   description?: string;
   buttonText?: string;
   className?: string;
-  variant?: 'card' | 'banner' | 'button' | 'sidebar';
+  variant?: "card" | "banner" | "button" | "sidebar";
   targetUrl?: string;
 }
 
 export default function DirectLinkAd({
-  title = 'Featured Recommendation',
-  description = 'Discover top curated offers, tools, and insights from our verified network partners.',
-  buttonText = 'Explore Offer ↗',
-  className = '',
-  variant = 'card',
+  title = "Featured Recommendation",
+  description = "Discover top curated offers, tools, and insights from our verified network partners.",
+  buttonText = "Explore Offer ↗",
+  className = "",
+  variant = "card",
   targetUrl,
 }: DirectLinkAdProps) {
-  const adUrl = targetUrl || 'https://www.effectivecpmnetwork.com/rpn69gan?key=2b06f18d099a81d3a10cf358d860c9a5';
+  const adUrl =
+    targetUrl ||
+    "https://www.effectivecpmnetwork.com/rpn69gan?key=2b06f18d099a81d3a10cf358d860c9a5";
 
-  if (variant === 'button') {
+  if (variant === "button") {
     return (
       <a
         href={adUrl}
@@ -33,7 +35,9 @@ export default function DirectLinkAd({
   }
 
   return (
-    <div className={`ad-unit ad-unit--direct-card ad-unit--variant-${variant} ${className}`}>
+    <div
+      className={`ad-unit ad-unit--direct-card ad-unit--variant-${variant} ${className}`}
+    >
       <div className="ad-unit__label">Sponsored Link</div>
       <div className="ad-direct-card__body">
         <div className="ad-direct-card__info">
