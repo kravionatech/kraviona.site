@@ -15,7 +15,17 @@ const SITE_URL = (
     ? "http://localhost:3000"
     : "https://kraviona.site")
 ).replace(/\/$/, "");
-const emptyForm = { title: "", category: "", content: "", excerpt: "" };
+const emptyForm = {
+  title: "",
+  category: "",
+  content: "",
+  excerpt: "",
+  tags: [] as string[],
+  keyTakeaways: [] as string[],
+  faqs: [] as { question: string; answer: string }[],
+  featuredImage: { url: "", alt: "" },
+  seo: { metaTitle: "", metaDescription: "", ogImage: "" },
+};
 type Notice = { type: "success" | "error" | "info"; text: string } | null;
 
 async function call(path: string, options: RequestInit = {}) {
@@ -258,6 +268,28 @@ export default function Editor() {
           {notice.text}
         </div>
       )}
+      <section className="dashboard-grid" aria-label="Editor dashboard summary">
+        <div className="metric-card">
+          <span>My stories</span>
+          <b>{posts.length}</b>
+          <small>Only your articles</small>
+        </div>
+        <div className="metric-card">
+          <span>Published</span>
+          <b>{posts.filter((post) => post.status === "published").length}</b>
+          <small>Live on Kraviona</small>
+        </div>
+        <div className="metric-card">
+          <span>Drafts</span>
+          <b>{posts.filter((post) => post.status === "draft").length}</b>
+          <small>Private workspace</small>
+        </div>
+        <div className="metric-card">
+          <span>Link allowance</span>
+          <b>{limit}</b>
+          <small>Per article</small>
+        </div>
+      </section>
       <div className="workspace">
         <section className="panel composer">
           <div className="section-head">
@@ -318,6 +350,234 @@ export default function Editor() {
             }
             maxWords={2500}
           />
+          <div className="editor-sections">
+            <section className="sub-panel">
+              <div className="section-head">
+                <div>
+                  <h3>Story details</h3>
+                  <p className="muted">
+                    Organise the article like an administrator-created story.
+                  </p>
+                </div>
+              </div>
+              <label>
+                Tags <small>Maximum 12</small>
+                <input
+                  value={form.tags.join(", ")}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      tags: event.target.value
+                        .split(",")
+                        .map((tag) => tag.trim())
+                        .filter(Boolean)
+                        .slice(0, 12),
+                    }))
+                  }
+                  placeholder="AI, technology, strategy"
+                />
+              </label>
+              <label>
+                Key takeaways <small>One per line</small>
+                <textarea
+                  rows={4}
+                  value={form.keyTakeaways.join("\n")}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      keyTakeaways: event.target.value
+                        .split("\n")
+                        .map((item) => item.trim())
+                        .filter(Boolean)
+                        .slice(0, 8),
+                    }))
+                  }
+                  placeholder="A concise, actionable takeaway"
+                />
+              </label>
+            </section>
+            <section className="sub-panel">
+              <div className="section-head">
+                <div>
+                  <h3>Featured image</h3>
+                  <p className="muted">
+                    Used on cards, the article hero and social previews.
+                  </p>
+                </div>
+              </div>
+              <label>
+                Image URL
+                <input
+                  type="url"
+                  value={form.featuredImage.url}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      featuredImage: {
+                        ...current.featuredImage,
+                        url: event.target.value,
+                      },
+                    }))
+                  }
+                  placeholder="https://…"
+                />
+              </label>
+              <label>
+                Accessible alt text
+                <input
+                  value={form.featuredImage.alt}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      featuredImage: {
+                        ...current.featuredImage,
+                        alt: event.target.value,
+                      },
+                    }))
+                  }
+                  placeholder="Describe the image"
+                />
+              </label>
+              {form.featuredImage.url && (
+                <img
+                  className="featured-preview"
+                  src={form.featuredImage.url}
+                  alt={form.featuredImage.alt || "Featured preview"}
+                />
+              )}
+            </section>
+            <section className="sub-panel seo-panel">
+              <div className="section-head">
+                <div>
+                  <h3>SEO & sharing</h3>
+                  <p className="muted">
+                    Canonical URL and indexing are controlled safely by
+                    Kraviona.
+                  </p>
+                </div>
+              </div>
+              <label>
+                SEO title <small>{form.seo.metaTitle.length}/60</small>
+                <input
+                  maxLength={60}
+                  value={form.seo.metaTitle}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      seo: { ...current.seo, metaTitle: event.target.value },
+                    }))
+                  }
+                  placeholder={form.title || "Search result title"}
+                />
+              </label>
+              <label>
+                Meta description{" "}
+                <small>{form.seo.metaDescription.length}/160</small>
+                <textarea
+                  rows={3}
+                  maxLength={160}
+                  value={form.seo.metaDescription}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      seo: {
+                        ...current.seo,
+                        metaDescription: event.target.value,
+                      },
+                    }))
+                  }
+                  placeholder={form.excerpt || "Search and sharing description"}
+                />
+              </label>
+              <label>
+                Custom social image URL
+                <input
+                  type="url"
+                  value={form.seo.ogImage}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      seo: { ...current.seo, ogImage: event.target.value },
+                    }))
+                  }
+                  placeholder="Defaults to featured image"
+                />
+              </label>
+            </section>
+            <section className="sub-panel seo-panel">
+              <div className="section-head">
+                <div>
+                  <h3>Frequently asked questions</h3>
+                  <p className="muted">
+                    Optional FAQs appear on the article and in structured data.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      faqs: [
+                        ...current.faqs,
+                        { question: "", answer: "" },
+                      ].slice(0, 10),
+                    }))
+                  }
+                >
+                  + Add FAQ
+                </button>
+              </div>
+              {form.faqs.map((faq, index) => (
+                <div className="faq-row" key={index}>
+                  <input
+                    value={faq.question}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        faqs: current.faqs.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? { ...item, question: event.target.value }
+                            : item,
+                        ),
+                      }))
+                    }
+                    placeholder="Question"
+                  />
+                  <textarea
+                    rows={2}
+                    value={faq.answer}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        faqs: current.faqs.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? { ...item, answer: event.target.value }
+                            : item,
+                        ),
+                      }))
+                    }
+                    placeholder="Direct answer"
+                  />
+                  <button
+                    type="button"
+                    className="remove-faq"
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        faqs: current.faqs.filter(
+                          (_, itemIndex) => itemIndex !== index,
+                        ),
+                      }))
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              {!form.faqs.length && <p className="muted">No FAQs added.</p>}
+            </section>
+          </div>
           <div className="metrics">
             <span>{words} / 300 words minimum</span>
             <span className={links > limit ? "danger-text" : ""}>
