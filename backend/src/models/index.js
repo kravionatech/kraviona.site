@@ -19,7 +19,7 @@ PostSchema.pre('validate', function () {
   if (this.status === 'published' && !this.wordCount) this.invalidate('wordCount', 'Published posts need content');
 });
 
-const CategorySchema = new Schema({ name: { type: String, required: true }, slug: { type: String, unique: true, required: true }, description: String, seo }, { timestamps: true });
+const CategorySchema = new Schema({ name: { type: String, required: true }, slug: { type: String, unique: true, required: true }, description: String, postCount: { type: Number, default: 0, min: 0 }, seo }, { timestamps: true });
 const UserSchema = new Schema({ name: String, email: { type: String, unique: true, lowercase: true, required: true }, passwordHash: String, role: { type: String, enum: ['reader', 'admin'], default: 'reader' }, refreshTokenHash: String }, { timestamps: true });
 const CommentSchema = new Schema({ post: { type: Schema.Types.ObjectId, ref: 'Post', required: true }, user: { type: Schema.Types.ObjectId, ref: 'User', required: true }, parentComment: { type: Schema.Types.ObjectId, ref: 'Comment', default: null }, content: { type: String, required: true, maxlength: 2000 }, status: { type: String, enum: ['pending', 'approved', 'spam'], default: 'pending' } }, { timestamps: true });
 const SubscriberSchema = new Schema({ email: { type: String, unique: true, lowercase: true }, status: { type: String, enum: ['pending', 'subscribed', 'unsubscribed'], default: 'pending' }, resendContactId: String, confirmToken: String, subscribedAt: Date }, { timestamps: true });
@@ -31,7 +31,7 @@ const SiteSettingsSchema = new Schema({
   heroDescription: { type: String, default: 'Deeply researched ideas on technology, growth, and modern work—for people who prefer signal over noise.' },
   briefingTitle: { type: String, default: 'Your inbox deserves better ideas.' }, briefingDescription: { type: String, default: 'One original essay or practical framework every week.' },
   defaultSeo: { title: String, description: String, ogImage: String }, socialLinks: [{ label: String, url: String }],
-  officialSiteUrl: { type: String, default: 'https://kraviona.com' },
+  officialSiteUrl: { type: String, default: 'https://kraviona.site' },
   contactEmail: { type: String, default: 'kravionatech@gmail.com' },
   contactPhone: { type: String, default: '+91 96085 53167' },
   whatsappUrl: { type: String, default: 'https://wa.me/919608553167' },

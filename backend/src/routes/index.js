@@ -15,6 +15,25 @@ const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch
 const cookie = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', path: '/' };
 const tokens = u => ({ access: jwt.sign({ id: u.id, role: u.role, name: u.name }, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' }), refresh: jwt.sign({ id: u.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' }) });
 const siteBase = () => 'https://kraviona.site';
+const legacyInternalLinkPattern = /https?:\/\/(?:www\.)?kraviona\.site\/(?:services\/(?:ai-automation|web-development)|contact)\/?(?=["'#?]|$)/gi;
+const sanitizeLegacyInternalLinks = content => String(content || '').replace(legacyInternalLinkPattern, `${siteBase()}/services#contact`);
+const normalizedCategoryName = name => name === 'BlockChain' ? 'Blockchain' : name;
+function publicPost(post) {
+  const result = post?.toObject ? post.toObject() : post;
+  if (!result) return result;
+  result.content = sanitizeLegacyInternalLinks(result.content);
+  if (result.category?.name) result.category.name = normalizedCategoryName(result.category.name);
+  return result;
+}
+function publicCategory(category) {
+  const result = category?.toObject ? category.toObject() : category;
+  if (result?.name) result.name = normalizedCategoryName(result.name);
+  return result;
+}
+async function adjustCategoryPostCount(categoryId, change) {
+  if (!categoryId || !change) return;
+  await Category.findByIdAndUpdate(categoryId, { $inc: { postCount: change } });
+}
 function requireAdminQuery(req) { try { const data = jwt.verify(req.cookies.accessToken || req.headers.authorization?.replace('Bearer ', ''), process.env.JWT_ACCESS_SECRET); if (data.role !== 'admin') throw new Error(); return data; } catch { throw Object.assign(new Error('Admin access required'), { status: 401 }); } }
 function normalizePost(body, existing = {}) {
   const title = String(body.title ?? existing.title ?? '').trim();
@@ -27,17 +46,17 @@ function normalizePost(body, existing = {}) {
   if (status === 'published') seo.isNoIndex = false;
   const author = { name: process.env.AUTHOR_NAME || 'Kraviona Editorial Team', slug: 'kraviona-editorial-team', sameAs: (process.env.AUTHOR_PROFILES || siteBase()).split(',').filter(Boolean), ...(existing.author?.toObject?.() || existing.author || {}), ...(body.author || {}) };
   author.sameAs = (author.sameAs || []).filter(Boolean);
-  return { ...body, title, slug, status, seo, author, tags: (body.tags || existing.tags || []).map(x => String(x).trim()).filter(Boolean), keyTakeaways: (body.keyTakeaways || existing.keyTakeaways || []).map(x => String(x).trim()).filter(Boolean), faqs: (body.faqs || existing.faqs || []).filter(x => x?.question && x?.answer) };
+  return { ...body, title, slug, status, content: sanitizeLegacyInternalLinks(body.content ?? existing.content ?? ''), seo, author, tags: (body.tags || existing.tags || []).map(x => String(x).trim()).filter(Boolean), keyTakeaways: (body.keyTakeaways || existing.keyTakeaways || []).map(x => String(x).trim()).filter(Boolean), faqs: (body.faqs || existing.faqs || []).filter(x => x?.question && x?.answer) };
 }
 function normalizeService(body, existing = {}) {
   const title = String(body.title ?? existing.title ?? '').trim();
   const slug = slugify(body.slug || existing.slug || title, { lower: true, strict: true });
-  const officialBase = 'https://kraviona.site';
+  const serviceContactUrl = 'https://kraviona.site/services#contact';
   return {
     ...body, title, slug,
     summary: String(body.summary ?? existing.summary ?? '').trim(),
     deliverables: (body.deliverables || existing.deliverables || []).map(value => String(value).trim()).filter(Boolean),
-    officialUrl: String(body.officialUrl || existing.officialUrl || `${officialBase}/services`).trim(),
+    officialUrl: String(body.officialUrl || existing.officialUrl || serviceContactUrl).trim(),
     seo: { ...(existing.seo?.toObject?.() || existing.seo || {}), ...(body.seo || {}) }
   };
 }
@@ -55,14 +74,14 @@ r.get('/auth/me',auth,wrap(async(req,res)=>{const u=await User.findById(req.user
 r.post('/auth/refresh',wrap(async(req,res)=>{const data=jwt.verify(req.cookies.refreshToken,process.env.JWT_REFRESH_SECRET);const u=await User.findById(data.id);if(!u||!await bcrypt.compare(req.cookies.refreshToken,u.refreshTokenHash))return res.status(401).json({error:'Invalid refresh token'});const t=tokens(u);res.cookie('accessToken',t.access,{...cookie,maxAge:900000}).json({ok:true});}));
 r.post('/auth/logout',(_,res)=>res.clearCookie('accessToken',cookie).clearCookie('refreshToken',cookie).json({ok:true}));
 
-r.get('/posts',wrap(async(req,res)=>{const q={};if(req.query.status==='all'){requireAdminQuery(req);if(['draft','published'].includes(req.query.filter))q.status=req.query.filter;}else q.status='published';if(req.query.category)q.category=req.query.category;if(req.query.search)q.$text={$search:req.query.search};const limit=Math.min(+req.query.limit||12,100),page=Math.max(+req.query.page||1,1);const [items,total]=await Promise.all([Post.find(q).populate('category').sort({publishedAt:-1,createdAt:-1}).skip((page-1)*limit).limit(limit),Post.countDocuments(q)]);res.json({items,total,page,pages:Math.ceil(total/limit)});}));
+r.get('/posts',wrap(async(req,res)=>{const q={};if(req.query.status==='all'){requireAdminQuery(req);if(['draft','published'].includes(req.query.filter))q.status=req.query.filter;}else q.status='published';if(req.query.category)q.category=req.query.category;if(req.query.search)q.$text={$search:req.query.search};const limit=Math.min(+req.query.limit||12,100),page=Math.max(+req.query.page||1,1);const [items,total]=await Promise.all([Post.find(q).populate('category').sort({publishedAt:-1,createdAt:-1}).skip((page-1)*limit).limit(limit),Post.countDocuments(q)]);res.json({items:items.map(publicPost),total,page,pages:Math.ceil(total/limit)});}));
 r.get('/posts/id/:id',auth,admin,wrap(async(req,res)=>{const p=await Post.findById(req.params.id).populate('category');if(!p)return res.status(404).json({error:'Post not found'});res.json(p);}));
-r.get('/posts/:slug',wrap(async(req,res)=>{if(req.query.preview==='true')requireAdminQuery(req);const p=await Post.findOne({slug:req.params.slug,...(req.query.preview==='true'?{}:{status:'published'})}).populate('category');if(!p)return res.status(404).json({error:'Post not found'});res.json(p);}));
-r.post('/posts',auth,admin,wrap(async(req,res)=>{const post=await Post.create(normalizePost(req.body));res.status(201).json(await post.populate('category'));}));
-r.put('/posts/:id',auth,admin,wrap(async(req,res)=>{const post=await Post.findById(req.params.id);if(!post)return res.status(404).json({error:'Post not found'});post.set(normalizePost(req.body,post));await post.save();res.json(await post.populate('category'));}));
-r.delete('/posts/:id',auth,admin,wrap(async(req,res)=>{await Post.findByIdAndDelete(req.params.id);res.status(204).end();}));
+r.get('/posts/:slug',wrap(async(req,res)=>{if(req.query.preview==='true')requireAdminQuery(req);const p=await Post.findOne({slug:req.params.slug,...(req.query.preview==='true'?{}:{status:'published'})}).populate('category');if(!p)return res.status(404).json({error:'Post not found'});res.json(publicPost(p));}));
+r.post('/posts',auth,admin,wrap(async(req,res)=>{const post=await Post.create(normalizePost(req.body));if(post.status==='published')await adjustCategoryPostCount(post.category,1);res.status(201).json(await post.populate('category'));}));
+r.put('/posts/:id',auth,admin,wrap(async(req,res)=>{const post=await Post.findById(req.params.id);if(!post)return res.status(404).json({error:'Post not found'});const previousCategory=String(post.category||'');const wasPublished=post.status==='published';post.set(normalizePost(req.body,post));await post.save();const currentCategory=String(post.category||'');const isPublished=post.status==='published';if(wasPublished&&(!isPublished||previousCategory!==currentCategory))await adjustCategoryPostCount(previousCategory,-1);if(isPublished&&(!wasPublished||previousCategory!==currentCategory))await adjustCategoryPostCount(currentCategory,1);res.json(await post.populate('category'));}));
+r.delete('/posts/:id',auth,admin,wrap(async(req,res)=>{const post=await Post.findById(req.params.id);if(!post)return res.status(404).end();await post.deleteOne();if(post.status==='published')await adjustCategoryPostCount(post.category,-1);res.status(204).end();}));
 
-r.get('/categories',wrap(async(_,res)=>res.json(await Category.find().sort({name:1}))));
+r.get('/categories',wrap(async(_,res)=>res.json((await Category.find().sort({name:1})).map(publicCategory))));
 r.post('/categories',auth,admin,wrap(async(req,res)=>{const slug=slugify(req.body.slug||req.body.name,{lower:true,strict:true});res.status(201).json(await Category.create({...req.body,slug,seo:{...req.body.seo,canonicalUrl:`${siteBase()}/category/${slug}`}}));}));
 r.put('/categories/:id',auth,admin,wrap(async(req,res)=>{const c=await Category.findById(req.params.id);if(!c)return res.status(404).json({error:'Category not found'});const slug=slugify(req.body.slug||req.body.name||c.name,{lower:true,strict:true});c.set({...req.body,slug,seo:{...(c.seo?.toObject?.()||c.seo||{}),...req.body.seo,canonicalUrl:`${siteBase()}/category/${slug}`}});await c.save();res.json(c);}));
 r.delete('/categories/:id',auth,admin,wrap(async(req,res)=>{if(await Post.exists({category:req.params.id}))return res.status(409).json({error:'Move or delete posts in this category first'});await Category.findByIdAndDelete(req.params.id);res.status(204).end();}));
