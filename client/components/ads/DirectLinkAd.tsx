@@ -33,21 +33,7 @@ export default function DirectLinkAd({
   }
 
   if (variant === 'sidebar') {
-    return (
-      <div className={`ad-direct-sidebar ${className}`}>
-        <span className="ad-unit__label">Promoted</span>
-        <h4>{title}</h4>
-        <p>{description}</p>
-        <a
-          href={adUrl}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          className="ad-direct-sidebar__link"
-        >
-          {buttonText}
-        </a>
-      </div>
-    );
+    return null;
   }
 
   return (
