@@ -8,5 +8,5 @@ interface DisplayAdProps { size: DisplayAdSize; className?: string; }
 
 export default function DisplayAd({ size, className = '' }: DisplayAdProps) {
   const unit = units[size];
-  return <section className={`ad-unit ad-unit--${size} ${className}`} aria-label="Advertisement"><span className="ad-unit__label">Advertisement</span><iframe title="Advertisement" loading="lazy" scrolling="no" sandbox="allow-scripts" src={`/ad/${size}`} width={unit.width} height={unit.height} /></section>;
+  return <section className={`ad-unit ad-unit--${size} ${className}`} aria-label="Advertisement"><span className="ad-unit__label">Advertisement</span><iframe title="Advertisement" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin" src={`/ad/${size}`} width={unit.width} height={unit.height} /></section>;
 }
