@@ -10,12 +10,10 @@ function normalizeUrl(value: string | undefined, fallback: string) {
 // legacy domain, or a www environment variable must never leak into a
 // canonical URL, sitemap, structured-data identifier, or social tag.
 export const PRODUCTION_SITE_URL = 'https://kraviona.site';
-export const SITE_URL = normalizeUrl(
-  process.env.NODE_ENV === 'development'
-    ? process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL || process.env.APP_URL
-    : PRODUCTION_SITE_URL,
-  process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : PRODUCTION_SITE_URL
-);
+// Canonicals, sitemaps, structured data and social tags must *always* point
+// at the public domain. Local development is only the delivery environment,
+// never the identity of a published URL.
+export const SITE_URL = PRODUCTION_SITE_URL;
 export const SITE_NAME = 'Kraviona';
 export const SITE_DESCRIPTION = 'Independent, deeply researched ideas on technology, growth, modern work, and building durable businesses.';
 export const DEFAULT_OG_IMAGE = '/opengraph-image';

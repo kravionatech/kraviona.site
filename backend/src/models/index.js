@@ -20,7 +20,7 @@ PostSchema.pre('validate', function () {
 });
 
 const CategorySchema = new Schema({ name: { type: String, required: true }, slug: { type: String, unique: true, required: true }, description: String, postCount: { type: Number, default: 0, min: 0 }, seo }, { timestamps: true });
-const UserSchema = new Schema({ name: String, email: { type: String, unique: true, lowercase: true, required: true }, passwordHash: String, role: { type: String, enum: ['reader', 'editor', 'admin'], default: 'reader' }, refreshTokenHash: String }, { timestamps: true });
+const UserSchema = new Schema({ name: String, email: { type: String, unique: true, lowercase: true, required: true }, passwordHash: String, role: { type: String, enum: ['reader', 'editor', 'admin'], default: 'reader' }, editorStatus: { type: String, enum: ['pending', 'active', 'suspended'], default: 'pending' }, backlinkLimit: { type: Number, default: 0, min: 0, max: 50 }, refreshTokenHash: String }, { timestamps: true });
 const GuestPostSchema = new Schema({
   title: { type: String, required: true, trim: true, maxlength: 120 },
   slug: { type: String, required: true, unique: true },
@@ -29,7 +29,9 @@ const GuestPostSchema = new Schema({
   authorName: { type: String, required: true, trim: true, maxlength: 80 },
   authorEmail: { type: String, required: true, lowercase: true, trim: true },
   website: { type: String, trim: true, maxlength: 300 },
+  category: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
   backlinks: [{ url: { type: String, required: true }, anchorText: { type: String, maxlength: 100 } }],
+  backlinkCount: { type: Number, default: 0 },
   status: { type: String, enum: ['draft', 'submitted', 'approved', 'published', 'rejected'], default: 'draft' },
   editor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   adminNotes: { type: String, maxlength: 2000 }, publishedAt: Date

@@ -57,7 +57,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const urls: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: siteDate, changeFrequency: 'daily', priority: 1 },
     { url: `${SITE_URL}/blog`, lastModified: latestPostDate, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${SITE_URL}/services`, lastModified: settingsDate, changeFrequency: 'monthly', priority: 0.8 }
+    { url: `${SITE_URL}/services`, lastModified: settingsDate, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/guest-posting`, lastModified: settingsDate, changeFrequency: 'monthly', priority: 0.6 }
   ];
 
   if (crawler.sitemapIncludeNewsletter !== false) {
