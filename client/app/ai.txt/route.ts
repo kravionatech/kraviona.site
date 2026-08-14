@@ -19,7 +19,7 @@ export async function GET() {
     `Site: ${settings.brandName || "Kraviona"}`,
     `Canonical: ${SITE_URL}`,
     `Publisher: Kraviona Editorial Team`,
-    `Content: ${crawler.llmsIntroduction || settings.defaultSeo?.description || "Independent editorial articles on technology, growth, work, and ideas."}`,
+    `Content: ${crawler.llmsIntroduction || settings.defaultSeo?.description || "Independent blockchain and Web3 news, research and analysis."}`,
     `AI-Crawlers: ${crawler.allowAiCrawlers === false ? "Disallowed" : "Allowed"}`,
     `AI-Training: ${crawler.aiTrainingAllowed === true ? "Allowed" : "Not allowed"}`,
     `Attribution: ${crawler.aiAttributionRequired === false ? "Optional" : "Required with canonical link to the source article"}`,

@@ -3,11 +3,11 @@ import NewsletterForm from "../../components/NewsletterForm";
 import { DEFAULT_OG_IMAGE, jsonLd, SITE_URL } from "../../lib/site";
 import "./newsletter.css";
 
-const newsletterTitle = "The Kraviona weekly briefing";
+const newsletterTitle = "The Chain Brief — Kraviona's Web3 Newsletter";
 const newsletterDescription =
-  "One original Kraviona essay or practical framework, delivered once a week. No noise.";
+  "The essential blockchain and Web3 news, protocol shifts and market analysis, delivered once a week without the noise.";
 export const metadata: Metadata = {
-  title: "The weekly briefing",
+  title: "The Chain Brief — Web3 Newsletter",
   description: newsletterDescription,
   alternates: { canonical: "/newsletter" },
   openGraph: {
@@ -30,34 +30,34 @@ export default function Newsletter() {
   const ld = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "The Kraviona weekly briefing",
+    name: "The Chain Brief",
     url: `${SITE_URL}/newsletter`,
     description:
-      "One original essay or practical framework, delivered once a week.",
+      "A weekly blockchain and Web3 intelligence briefing from Kraviona.",
     isPartOf: { "@id": `${SITE_URL}/#website` },
   };
   return (
     <div className="newsletter-page">
       <section className="wrap newsletter-hero">
         <div>
-          <div className="eyebrow">One thoughtful email · Every week</div>
-          <h1>A quieter way to stay ahead.</h1>
+          <div className="eyebrow">One verified dispatch · Every week</div>
+          <h1>Stay on-chain without chasing the feed.</h1>
           <p className="lead">
-            No breathless news cycle. No recycled threads. Just one deeply
-            considered idea on technology, growth, or better work.
+            The consequential blockchain news, market context and protocol
+            shifts—reported clearly and delivered in one focused briefing.
           </p>
           <NewsletterForm />
         </div>
         <aside className="newsletter-preview">
           <div className="preview-top">
-            <span>THE KRAVIONA BRIEFING</span>
+            <span>THE CHAIN BRIEF</span>
             <span>ISSUE 024</span>
           </div>
           <div className="preview-body">
-            <span className="kicker">This week’s idea</span>
-            <h2>The advantage of thinking one layer deeper.</h2>
+            <span className="kicker">This week on-chain</span>
+            <h2>What changed, why it matters, what comes next.</h2>
             <p>
-              The obvious answer is usually where the useful question begins.
+              A five-minute read for a market that never stops moving.
             </p>
             <div className="preview-lines">
               <i />
@@ -71,18 +71,18 @@ export default function Newsletter() {
         <div className="wrap">
           <div>
             <b>01</b>
-            <h3>Original</h3>
-            <p>Written from first principles—not assembled from the feed.</p>
+            <h3>Verified</h3>
+            <p>Source-led reporting—not recycled social media speculation.</p>
           </div>
           <div>
             <b>02</b>
-            <h3>Practical</h3>
-            <p>Every issue leaves you with an idea worth applying.</p>
+            <h3>Contextual</h3>
+            <p>Every development is connected to the protocol and market underneath it.</p>
           </div>
           <div>
             <b>03</b>
             <h3>Respectful</h3>
-            <p>One email a week. Clear writing. Zero inbox games.</p>
+            <p>One email a week. Clear analysis. Zero token promotion.</p>
           </div>
         </div>
       </section>

@@ -69,7 +69,7 @@ export default function MediaField({
           />
         </label>
         <label className="upload-button">
-          {uploading ? "Uploading…" : "Upload to Cloudinary"}
+          {uploading ? "Converting & uploading…" : "Upload as WebP"}
           <input
             hidden
             disabled={uploading}

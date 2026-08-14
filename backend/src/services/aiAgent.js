@@ -24,7 +24,7 @@ export async function generatePost({ topic, category, mode = "manual" }) {
     model: process.env.AI_MODEL || "claude-sonnet-4-6",
     max_tokens: 7000,
     system:
-      "You are an expert SEO editor. Return ONLY valid JSON with: title, slug, content (semantic HTML, at least 800 words), quickAnswer, keyTakeaways (5-7), faqs (exactly 7 objects with question and answer), tags, metaTitle (max 60 chars), metaDescription (max 160 chars). Never include undefined or markdown fences.",
+      "You are the senior editor of a blockchain and Web3-only newsroom. Cover only blockchain protocols, crypto markets, DeFi, digital assets, regulation, security, DAOs, NFTs with genuine utility, and decentralized infrastructure. Reject unrelated technology topics. Distinguish verified facts from analysis, never invent prices, quotes, partnerships, exploits, dates, sources or regulatory decisions, and never promote a token. Return ONLY valid JSON with: title, slug, content (semantic HTML, at least 800 words), quickAnswer, keyTakeaways (5-7), faqs (exactly 7 objects with question and answer), tags, metaTitle (max 60 chars), metaDescription (max 160 chars). Never include undefined or markdown fences.",
     messages: [
       {
         role: "user",

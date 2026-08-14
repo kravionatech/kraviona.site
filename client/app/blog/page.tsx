@@ -7,9 +7,9 @@ import { DisplayAd } from "../../components/ads";
 import "./blog-v2.css";
 
 type Query = { page?: string; search?: string };
-const journalTitle = "Tech Journal — AI, Blockchain & Web Dev | Kraviona";
+const journalTitle = "Blockchain & Web3 News and Analysis | Kraviona";
 const journalDescription =
-  "In-depth articles on AI, blockchain, cybersecurity, and web development. No fluff—just deeply researched tech insights.";
+  "Latest blockchain and Web3 news covering crypto markets, DeFi, protocols, digital assets, regulation and security.";
 
 function pageNumber(value?: string) {
   const page = Number(value);
@@ -115,17 +115,17 @@ export default async function Blog({
     <>
       <section className="journal-cover">
         <div className="wrap">
-          <div className="eyebrow">The Kraviona journal</div>
+          <div className="eyebrow">The on-chain newsroom</div>
           <div className="journal-cover__grid">
             <h1>
               {search
                 ? `Results for “${search}”`
-                : "Ideas with a longer shelf life."}
+                : "Blockchain news. Verified, not amplified."}
             </h1>
             <div>
               <p>
-                Independent essays and practical frameworks for clearer thinking
-                and better work.
+                Independent reporting and analysis for people building,
+                investing and working across the decentralized economy.
               </p>
               <form className="journal-search" role="search">
                 <label className="sr-only" htmlFor="journal-search">
@@ -135,7 +135,7 @@ export default async function Blog({
                   id="journal-search"
                   name="search"
                   defaultValue={search}
-                  placeholder="Search topics, ideas, guides…"
+                  placeholder="Search protocols, markets, policy…"
                 />
                 <button>Search</button>
               </form>

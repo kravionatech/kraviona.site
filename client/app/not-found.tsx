@@ -10,7 +10,7 @@ export default function NotFound() {
         <div className="eyebrow">404 · Off the map</div>
         <h1>This page has moved on.</h1>
         <p>
-          The idea you were looking for may have a new address. Try the journal
+          The blockchain story you were looking for may have a new address. Try the newsroom
           instead.
         </p>
         <a className="btn" href="/blog">

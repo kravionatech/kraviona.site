@@ -162,21 +162,21 @@ const SiteSettingsSchema = new Schema(
   {
     key: { type: String, unique: true, default: "primary" },
     brandName: { type: String, default: "Kraviona" },
-    tagline: { type: String, default: "Independent ideas for ambitious minds" },
-    heroEyebrow: { type: String, default: "Independent editorial" },
-    heroTitle: { type: String, default: "Think clearly. Build what lasts." },
+    tagline: { type: String, default: "Blockchain intelligence without the hype" },
+    heroEyebrow: { type: String, default: "Independent blockchain newsroom" },
+    heroTitle: { type: String, default: "The signal layer for the on-chain world." },
     heroDescription: {
       type: String,
       default:
-        "Deeply researched ideas on technology, growth, and modern work—for people who prefer signal over noise.",
+        "Independent reporting on blockchain, crypto markets, protocols, policy and Web3 infrastructure.",
     },
     briefingTitle: {
       type: String,
-      default: "Your inbox deserves better ideas.",
+      default: "Web3 signal, delivered weekly.",
     },
     briefingDescription: {
       type: String,
-      default: "One original essay or practical framework every week.",
+      default: "The consequential blockchain news and protocol shifts, in one focused weekly briefing.",
     },
     defaultSeo: { title: String, description: String, ogImage: String },
     socialLinks: [{ label: String, url: String }],
@@ -212,7 +212,7 @@ const SiteSettingsSchema = new Schema(
       llmsIntroduction: {
         type: String,
         default:
-          "Independent, deeply researched ideas on technology, growth, modern work, and building durable businesses.",
+          "Independent blockchain and Web3 news, research and analysis covering markets, protocols, DeFi, policy and security.",
       },
       llmsInstructions: {
         type: String,

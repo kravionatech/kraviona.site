@@ -44,12 +44,19 @@ const tokens = (u) => ({
   }),
 });
 const siteBase = () => "https://kraviona.site";
+const WEB3_CATEGORY_SLUGS = [
+  "blockchain",
+  "markets-defi",
+  "protocols-infrastructure",
+  "security",
+  "policy-regulation",
+];
 const legacyInternalLinkPattern =
   /https?:\/\/(?:www\.)?kraviona\.site\/(?:services\/(?:ai-automation|web-development)|contact)\/?(?=["'#?]|$)/gi;
 const sanitizeLegacyInternalLinks = (content) =>
   String(content || "").replace(
     legacyInternalLinkPattern,
-    `${siteBase()}/services#contact`,
+    `${siteBase()}/blog`,
   );
 const normalizedCategoryName = (name) =>
   name === "BlockChain" ? "Blockchain" : name;
@@ -555,8 +562,21 @@ r.get(
       requireAdminQuery(req);
       if (["draft", "published"].includes(req.query.filter))
         q.status = req.query.filter;
-    } else q.status = "published";
-    if (req.query.category) q.category = req.query.category;
+    } else {
+      q.status = "published";
+      const web3CategoryIds = await Category.find({
+        slug: { $in: WEB3_CATEGORY_SLUGS },
+      }).distinct("_id");
+      q.category =
+        req.query.category &&
+        web3CategoryIds.some(
+          (id) => String(id) === String(req.query.category),
+        )
+          ? req.query.category
+          : { $in: req.query.category ? [] : web3CategoryIds };
+    }
+    if (req.query.status === "all" && req.query.category)
+      q.category = req.query.category;
     if (req.query.search) q.$text = { $search: req.query.search };
     const limit = Math.min(+req.query.limit || 12, 100),
       page = Math.max(+req.query.page || 1, 1);
@@ -590,9 +610,14 @@ r.get(
   "/posts/:slug",
   wrap(async (req, res) => {
     if (req.query.preview === "true") requireAdminQuery(req);
+    const web3CategoryIds = await Category.find({
+      slug: { $in: WEB3_CATEGORY_SLUGS },
+    }).distinct("_id");
     const p = await Post.findOne({
       slug: req.params.slug,
-      ...(req.query.preview === "true" ? {} : { status: "published" }),
+      ...(req.query.preview === "true"
+        ? {}
+        : { status: "published", category: { $in: web3CategoryIds } }),
     }).populate("category");
     if (!p) return res.status(404).json({ error: "Post not found" });
     res.json(publicPost(p));
@@ -646,7 +671,13 @@ r.delete(
 r.get(
   "/categories",
   wrap(async (_, res) =>
-    res.json((await Category.find().sort({ name: 1 })).map(publicCategory)),
+    res.json(
+      (
+        await Category.find({ slug: { $in: WEB3_CATEGORY_SLUGS } }).sort({
+          name: 1,
+        })
+      ).map(publicCategory),
+    ),
   ),
 );
 r.post(

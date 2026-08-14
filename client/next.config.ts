@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
   compress: true,
   trailingSlash: false,
   skipTrailingSlashRedirect: true,
+  async redirects() {
+    return [
+      { source: "/services", destination: "/blog", permanent: true },
+      { source: "/guest-posting", destination: "/blog", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

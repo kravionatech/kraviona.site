@@ -31,7 +31,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let settings: any = {};
   let posts: any[] = [];
   let categories: any[] = [];
-  let services: any[] = [];
 
   try {
     settings = await api("/settings");
@@ -40,10 +39,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       5000,
       Math.max(1, crawler.sitemapMaxPosts || 500),
     );
-    [posts, categories, services] = await Promise.all([
+    [posts, categories] = await Promise.all([
       crawler.sitemapIncludePosts === false ? [] : getAllPosts(maxPosts),
       crawler.sitemapIncludeCategories === false ? [] : api("/categories"),
-      crawler.sitemapIncludeServices === false ? [] : api("/services"),
     ]);
   } catch (error) {
     console.error("Sitemap data error:", error);
@@ -69,18 +67,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: latestPostDate,
       changeFrequency: "daily",
       priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/services`,
-      lastModified: settingsDate,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guest-posting`,
-      lastModified: new Date("2026-08-09T00:00:00+05:30"),
-      changeFrequency: "weekly",
-      priority: 0.8,
     },
   ];
 
@@ -111,20 +97,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       })),
   );
-
-  // Services currently share one canonical landing page, so do not emit
-  // non-existent /services/:slug URLs. Service changes still update /services.
-  if (services.length) {
-    const latestServiceDate = services
-      .map((service) => validDate(service.updatedAt))
-      .filter((date): date is Date => Boolean(date))
-      .sort((a, b) => b.getTime() - a.getTime())[0];
-    const servicesEntry = urls.find(
-      (entry) => entry.url === `${SITE_URL}/services`,
-    );
-    if (servicesEntry && latestServiceDate)
-      servicesEntry.lastModified = latestServiceDate;
-  }
 
   return urls;
 }

@@ -31,12 +31,17 @@ export async function uploadImage(dataUri, folder = "kraviona") {
   const result = await cloudinary.uploader.upload(dataUri, {
     folder,
     resource_type: "image",
-    transformation: [{ quality: "auto", fetch_format: "auto" }],
+    format: "webp",
+    transformation: [
+      { width: 1920, height: 1080, crop: "limit" },
+      { quality: "auto:good" },
+    ],
   });
   return {
     url: result.secure_url,
     publicId: result.public_id,
     width: result.width,
     height: result.height,
+    format: "webp",
   };
 }

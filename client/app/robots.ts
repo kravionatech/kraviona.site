@@ -34,7 +34,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
           "CCBot",
         ],
         ...(aiAllowed
-          ? { allow: ["/", "/blog/", "/category/", "/services"] }
+          ? { allow: ["/", "/blog/", "/category/", "/newsletter"] }
           : { disallow: "/" }),
       },
     ],

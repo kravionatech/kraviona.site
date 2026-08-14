@@ -8,6 +8,7 @@ import { errorHandler } from "./middleware/index.js";
 import { startCron } from "./jobs/autoGeneratePost.cron.js";
 import { ensureDefaultServices } from "./services/serviceCatalog.js";
 import { ensureInitialAdmin } from "./services/bootstrapAdmin.js";
+import { ensureWeb3Publication } from "./scripts/seedDemoPosts.js";
 
 for (const key of ["MONGO_URI", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET"])
   if (!process.env[key]) {
@@ -15,6 +16,7 @@ for (const key of ["MONGO_URI", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET"])
     process.exit(1);
   }
 await mongoose.connect(process.env.MONGO_URI);
+await ensureWeb3Publication();
 await ensureDefaultServices();
 await ensureInitialAdmin();
 const app = express();

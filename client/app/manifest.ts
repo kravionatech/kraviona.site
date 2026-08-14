@@ -3,11 +3,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Kraviona",
     short_name: "Kraviona",
-    description: "Clear ideas for better work.",
+    description: "Independent blockchain and Web3 news, research and analysis.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f4f7f6",
-    theme_color: "#264b51",
+    background_color: "#07110f",
+    theme_color: "#07110f",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
   };
 }

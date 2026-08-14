@@ -16,7 +16,7 @@ export const PRODUCTION_SITE_URL = "https://kraviona.site";
 export const SITE_URL = PRODUCTION_SITE_URL;
 export const SITE_NAME = "Kraviona";
 export const SITE_DESCRIPTION =
-  "Independent, deeply researched ideas on technology, growth, modern work, and building durable businesses.";
+  "Independent blockchain and Web3 news covering crypto markets, DeFi, protocols, regulation, security and digital assets.";
 export const DEFAULT_OG_IMAGE = "/opengraph-image";
 
 export function absoluteUrl(path = "/") {

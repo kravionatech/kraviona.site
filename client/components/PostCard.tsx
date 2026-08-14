@@ -44,7 +44,7 @@ export default function PostCard({
               post.category?.slug ? `/category/${post.category.slug}` : "/blog"
             }
           >
-            {post.category?.name || "Journal"}
+            {post.category?.name || "Web3"}
           </a>
           <span>
             {formatDate(post.publishedAt)} · {readingTime(words)} min

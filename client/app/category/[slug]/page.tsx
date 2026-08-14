@@ -40,13 +40,13 @@ export async function generateMetadata({
     const title = truncate(
       suppliedTitle.length >= 30
         ? suppliedTitle
-        : `${category.name} ideas and guides`,
+        : `${category.name} blockchain news and analysis`,
       60,
     );
     const description = truncate(
       suppliedDescription.length >= 50
         ? suppliedDescription
-        : `Explore Kraviona guides, explainers, and practical perspectives on ${category.name.toLowerCase()}.`,
+        : `Read the latest Kraviona reporting, explainers and analysis on ${category.name.toLowerCase()} across blockchain and Web3.`,
       160,
     );
     const canonical = `/category/${category.slug}`;
@@ -130,7 +130,7 @@ export default async function CategoryPage({
         {
           "@type": "ListItem",
           position: 2,
-          name: "Journal",
+          name: "Blockchain news",
           item: `${SITE_URL}/blog`,
         },
         {
@@ -148,7 +148,7 @@ export default async function CategoryPage({
         <div className="cover-orb" />
         <div className="wrap cover-content">
           <div className="cover-kicker">
-            <a href="/blog">Journal</a>
+            <a href="/blog">Blockchain news</a>
             <span>/</span>
             <span>{category.name}</span>
           </div>
@@ -263,10 +263,10 @@ export default async function CategoryPage({
         )}
         <section className="category-cta">
           <div>
-            <span className="eyebrow">Stay curious</span>
-            <h2>Ideas that respect your time.</h2>
+            <span className="eyebrow">The Chain Brief</span>
+            <h2>On-chain signal that respects your time.</h2>
           </div>
-          <p>Get the strongest Kraviona story delivered once a week.</p>
+          <p>Get the most consequential blockchain story delivered once a week.</p>
           <a className="btn" href="/newsletter">
             Join the briefing →
           </a>

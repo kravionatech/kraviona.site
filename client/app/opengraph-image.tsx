@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-export const alt = "Kraviona — Clear ideas for better work";
+export const alt = "Kraviona — Blockchain and Web3 intelligence";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export default function Image() {
@@ -12,13 +12,13 @@ export default function Image() {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: "72px 82px",
-        background: "#264b51",
+        background: "#07110f",
         color: "#ffffff",
         fontFamily: "serif",
       }}
     >
       <div style={{ display: "flex", fontSize: 42, fontWeight: 700 }}>
-        kraviona<span style={{ color: "#ff7048" }}>.</span>
+        kraviona<span style={{ color: "#7dffb3" }}>.</span>
       </div>
       <div
         style={{
@@ -30,18 +30,18 @@ export default function Image() {
           letterSpacing: "-4px",
         }}
       >
-        <span>Clear ideas for</span>
-        <span>better work.</span>
+        <span>Signal for the</span>
+        <span>on-chain world.</span>
       </div>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           fontSize: 22,
-          color: "#b9ccca",
+          color: "#9db7ad",
         }}
       >
-        <span>Technology · Growth · Work · Ideas</span>
+        <span>BLOCKCHAIN · WEB3 · DEFI · SECURITY</span>
         <span>kraviona.site</span>
       </div>
     </div>,

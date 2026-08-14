@@ -129,7 +129,7 @@ export default async function PostPage({
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "BlogPosting",
+        "@type": "NewsArticle",
         "@id": `${canonical}#article`,
         url: canonical,
         mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
@@ -160,7 +160,7 @@ export default async function PostPage({
           {
             "@type": "ListItem",
             position: 2,
-            name: "Journal",
+            name: "Blockchain news",
             item: `${SITE_URL}/blog`,
           },
           ...(p.category?.slug
@@ -205,7 +205,7 @@ export default async function PostPage({
         <nav className="breadcrumbs" aria-label="Breadcrumb">
           <a href="/">Home</a>
           <span>/</span>
-          <a href="/blog">Journal</a>
+          <a href="/blog">Blockchain news</a>
           {p.category?.slug && (
             <>
               <span>/</span>
@@ -215,7 +215,7 @@ export default async function PostPage({
         </nav>
         <header className="article-header">
           <div className="eyebrow">
-            {p.category?.name || "Kraviona journal"}
+            {p.category?.name || "Kraviona Web3"}
           </div>
           <h1>{p.title}</h1>
           <p className="article-deck">{p.quickAnswer}</p>
@@ -317,7 +317,7 @@ export default async function PostPage({
                   p.category?.slug ? `/category/${p.category.slug}` : "/blog"
                 }
               >
-                More in {p.category?.name || "the journal"} →
+                More in {p.category?.name || "Web3 news"} →
               </a>
             </div>
             <div className="story-grid">
