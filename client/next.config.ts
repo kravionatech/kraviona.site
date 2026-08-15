@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const noIndexHeader = { key: "X-Robots-Tag", value: "noindex" };
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
@@ -11,6 +14,9 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   compress: true,
+  experimental: {
+    optimizePackageImports: ["framer-motion"],
+  },
   trailingSlash: false,
   skipTrailingSlashRedirect: true,
   async redirects() {
