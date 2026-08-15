@@ -8,6 +8,15 @@ function normalizeOrigin(value) {
     .replace(/\/api$/, "");
 }
 
+function describeConnectionError(error) {
+  if (!(error instanceof Error)) return "Unknown connection error";
+  const cause = error.cause;
+  if (cause && typeof cause === "object" && "code" in cause) {
+    return String(cause.code);
+  }
+  return error.name === "TimeoutError" ? "TIMEOUT" : error.message;
+}
+
 const apiOrigin = normalizeOrigin(process.env.KRAVIONA_API_URL);
 
 async function readResponse(response) {
@@ -84,14 +93,43 @@ export class KravionaApi {
   }
 
   async health() {
-    const response = await fetch(`${this.origin}/health`, {
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
+    const checkedAt = new Date().toISOString();
 
-    if (!response.ok) {
-      throw new Error(`Health check failed (${response.status}).`);
+    try {
+      const response = await fetch(`${this.origin}/health`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      const data = await readResponse(response);
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          status: "unhealthy",
+          service: "kraviona-api",
+          origin: this.origin,
+          httpStatus: response.status,
+          checkedAt,
+        };
+      }
+
+      return {
+        ...data,
+        ok: data.ok !== false,
+        status: data.status || (data.ok === false ? "unhealthy" : "online"),
+        service: data.service || "kraviona-api",
+        origin: this.origin,
+        checkedAt,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        status: "offline",
+        service: "kraviona-api",
+        origin: this.origin,
+        error: describeConnectionError(error),
+        checkedAt,
+      };
     }
-    return response.json();
   }
 }
 

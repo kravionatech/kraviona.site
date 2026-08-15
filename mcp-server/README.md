@@ -85,7 +85,7 @@ npm run start:stdio -w mcp-server
 npm run start:http -w mcp-server
 ```
 
-The contract test works without a running backend. The integration test requires the backend and valid administrator credentials.
+The contract and HTTP transport tests work without a running backend. `cms_health` reports the backend as `online`, `unhealthy`, or `offline` without taking down the MCP session. The integration test requires the backend and valid administrator credentials.
 
 ## Remote deployment
 

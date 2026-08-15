@@ -160,9 +160,10 @@ try {
     name: "cms_health",
     arguments: {},
   });
-  if (healthTool.isError)
+  const healthPayload = JSON.parse(healthTool.content?.[0]?.text || "{}");
+  if (healthTool.isError || typeof healthPayload.ok !== "boolean")
     throw new Error(
-      `Backend health tool failed: ${healthTool.content?.[0]?.text}`,
+      `Backend health tool returned an invalid diagnostic: ${healthTool.content?.[0]?.text}`,
     );
 
   if (process.env.KRAVIONA_ADMIN_EMAIL && process.env.KRAVIONA_ADMIN_PASSWORD) {
@@ -194,7 +195,7 @@ try {
     throw new Error("OAuth access token could not access all tools");
 
   console.log(
-    `HTTP MCP smoke test passed: Claude DCR + PKCE OAuth, static bearer auth, ${tools.tools.length} tools, and backend API access confirmed.`,
+    `HTTP MCP smoke test passed: Claude DCR + PKCE OAuth, static bearer auth, ${tools.tools.length} tools, and backend health reporting confirmed.`,
   );
 } finally {
   child.kill("SIGTERM");

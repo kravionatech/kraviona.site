@@ -3058,9 +3058,9 @@ html.route-pending {
   --mint: var(--accent-secondary);
   --cream: var(--surface-raised);
   --white: #ffffff;
-  --sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
-  --serif: var(--font-space-grotesk), var(--sans);
-  --display: var(--font-space-grotesk), var(--sans);
+  --sans: var(--font-inter, Inter), ui-sans-serif, system-ui, sans-serif;
+  --serif: var(--font-space-grotesk, "Space Grotesk"), var(--sans);
+  --display: var(--font-space-grotesk, "Space Grotesk"), var(--sans);
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
 
@@ -3158,8 +3158,9 @@ select {
 }
 
 .news-masthead .brand {
-  font-family: var(--display);
+  font-family: var(--font-space-grotesk, "Space Grotesk"), var(--sans);
   font-weight: 700;
+  letter-spacing: -0.055em;
 }
 
 .news-masthead__actions {
@@ -3243,6 +3244,9 @@ select {
 .news-primary-nav a {
   border-color: var(--border);
   color: var(--text-secondary);
+  font-family: var(--sans);
+  font-size: 0.74rem;
+  font-weight: 700;
 }
 
 .news-primary-nav a:hover,
@@ -3264,10 +3268,7 @@ select {
 }
 
 .chain-hero h1,
-.display,
-h1,
-h2,
-h3 {
+.display {
   color: var(--text-primary);
   font-family: var(--display);
 }
@@ -3347,6 +3348,54 @@ h3 {
 .contact-section,
 .author-hero {
   background: #05070c;
+}
+
+.home-services,
+.guest-hero,
+.guest-account-form,
+.guest-benefits,
+.guest-benefits > div {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.home-service-grid {
+  border-color: var(--border);
+  background: var(--border);
+}
+
+.home-service {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.home-service:hover {
+  background: var(--surface-raised);
+}
+
+.home-service p,
+.home-service:hover p,
+.home-services__footer,
+.guest-account-form p,
+.guest-benefits span,
+.guest-note p {
+  color: var(--text-secondary);
+}
+
+.home-services__footer a,
+.guest-benefits strong {
+  color: var(--text-primary);
+}
+
+.guest-account-form input {
+  border-color: var(--border);
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.guest-note {
+  border-color: var(--border);
 }
 
 .coverage-grid,
