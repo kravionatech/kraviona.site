@@ -42,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#034a00", colorScheme: "dark light" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#050816", colorScheme: "dark light" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let categories: any[] = [], settings: any = {};

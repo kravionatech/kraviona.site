@@ -12,13 +12,13 @@ export default function Image() {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: "72px 82px",
-        background: "#07110f",
+        background: "linear-gradient(135deg, #050816 0%, #101936 62%, #22134f 100%)",
         color: "#ffffff",
         fontFamily: "serif",
       }}
     >
       <div style={{ display: "flex", fontSize: 42, fontWeight: 700 }}>
-        kraviona<span style={{ color: "#7dffb3" }}>.</span>
+        kraviona<span style={{ color: "#55e6ff" }}>.</span>
       </div>
       <div
         style={{
@@ -38,7 +38,7 @@ export default function Image() {
           display: "flex",
           justifyContent: "space-between",
           fontSize: 22,
-          color: "#9db7ad",
+          color: "#aebbd8",
         }}
       >
         <span>BLOCKCHAIN · WEB3 · DEFI · SECURITY</span>

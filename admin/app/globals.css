@@ -1,13 +1,13 @@
 :root {
-  --nav: #034a00;
-  --nav-2: #216e13;
-  --accent: #9ccb00;
-  --bg: #f5f8e9;
-  --paper: #fffffb;
-  --line: #d9e2c8;
-  --ink: #102d0d;
-  --muted: #657561;
-  --green: #216e13;
+  --nav: #050816;
+  --nav-2: #101936;
+  --accent: #00c8f0;
+  --bg: #f4f7ff;
+  --paper: #ffffff;
+  --line: #d8e0f0;
+  --ink: #0a1024;
+  --muted: #64708a;
+  --green: #0b7f91;
   --red: #a63e32;
   --serif: "Iowan Old Style", Georgia, serif;
 }
@@ -923,15 +923,15 @@ tbody tr:hover {
 
 /* Shared Kraviona logo palette */
 :root {
-  --nav: #034a00;
-  --nav-2: #216e13;
-  --accent: #9ccb00;
-  --logo-orange: #ebee00;
-  --bg: #f5f8e9;
-  --line: #d9e2c8;
-  --ink: #102d0d;
-  --muted: #657561;
-  --green: #216e13;
+  --nav: #050816;
+  --nav-2: #101936;
+  --accent: #00c8f0;
+  --logo-orange: #8b5cf6;
+  --bg: #f4f7ff;
+  --line: #d8e0f0;
+  --ink: #0a1024;
+  --muted: #64708a;
+  --green: #0b7f91;
 }
 body {
   background: var(--bg);
@@ -1089,7 +1089,7 @@ textarea:focus {
   }
 }
 
-/* Forest studio refresh */
+/* Blockchain studio refresh */
 ::selection {
   background: var(--logo-orange);
   color: var(--nav);
@@ -1097,7 +1097,7 @@ textarea:focus {
 
 body {
   background:
-    radial-gradient(circle at 90% 5%, rgba(156, 203, 0, 0.09), transparent 25rem),
+    radial-gradient(circle at 90% 5%, rgba(98, 55, 232, 0.1), transparent 25rem),
     var(--bg);
 }
 
@@ -1107,9 +1107,9 @@ body {
 
 .shell > aside {
   background:
-    radial-gradient(circle at 20% 8%, rgba(235, 238, 0, 0.09), transparent 14rem),
-    linear-gradient(180deg, var(--nav), #023600);
-  border-right: 1px solid rgba(235, 238, 0, 0.11);
+    radial-gradient(circle at 20% 8%, rgba(85, 230, 255, 0.1), transparent 14rem),
+    linear-gradient(180deg, var(--nav), #02040d);
+  border-right: 1px solid rgba(85, 230, 255, 0.12);
 }
 
 .brand::after {
@@ -1119,24 +1119,24 @@ body {
   height: 7px;
   margin-left: 5px;
   border-radius: 50%;
-  background: var(--logo-orange);
-  box-shadow: 0 0 13px rgba(235, 238, 0, 0.65);
+  background: var(--accent);
+  box-shadow: 0 0 13px rgba(85, 230, 255, 0.65);
 }
 
 .brand small {
-  color: #a9bd8f;
+  color: #8e9bb8;
 }
 
 .menu a {
   border-left: 0;
   border-radius: 9px;
-  color: #c1cfb1;
+  color: #aebbd8;
   transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
 .menu a i {
   width: 23px;
-  color: #8ea379;
+  color: #7f8dac;
   font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.04em;
@@ -1145,19 +1145,19 @@ body {
 .menu a:hover,
 .menu a.active {
   border-left: 0;
-  background: rgba(156, 203, 0, 0.16);
+  background: rgba(0, 200, 240, 0.12);
   color: #fff;
   transform: translateX(3px);
 }
 
 .menu a.active i {
-  color: var(--logo-orange);
+  color: var(--accent);
 }
 
 .page-kicker,
 .text-action,
 .story-title {
-  color: var(--nav-2);
+  color: #5530cb;
 }
 
 .card,
@@ -1165,7 +1165,7 @@ body {
 .edit-card,
 .data-panel {
   border-radius: 12px;
-  box-shadow: 0 12px 34px rgba(3, 74, 0, 0.055);
+  box-shadow: 0 12px 34px rgba(5, 8, 22, 0.065);
 }
 
 .card {
@@ -1176,7 +1176,7 @@ body {
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 18px 42px rgba(3, 74, 0, 0.1);
+  box-shadow: 0 18px 42px rgba(5, 8, 22, 0.12);
 }
 
 .btn,
@@ -1194,8 +1194,8 @@ button:not(.editor-tabs button):not(.toolbar button):hover {
 input:focus,
 select:focus,
 textarea:focus {
-  outline-color: rgba(156, 203, 0, 0.34);
-  border-color: var(--nav-2);
+  outline-color: rgba(0, 200, 240, 0.28);
+  border-color: #6237e8;
 }
 
 .ops-strip {
@@ -1206,7 +1206,7 @@ textarea:focus {
   margin-top: 18px;
   border: 1px solid var(--nav);
   border-radius: 12px;
-  background: rgba(235, 238, 0, 0.22);
+  background: rgba(85, 230, 255, 0.2);
 }
 
 .ops-strip a {
@@ -1226,7 +1226,7 @@ textarea:focus {
 }
 
 .ops-strip span {
-  color: #b7cba0;
+  color: #aebbd8;
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -1234,14 +1234,14 @@ textarea:focus {
 }
 
 .ops-strip b {
-  color: var(--logo-orange);
+  color: var(--accent);
   font: 600 1.6rem/1 var(--serif);
 }
 
 .ops-strip small {
   grid-column: 1 / -1;
   align-self: end;
-  color: #91a683;
+  color: #8e9bb8;
   font-size: 0.68rem;
 }
 
@@ -1262,7 +1262,7 @@ textarea:focus {
 }
 
 .readiness-card > div b {
-  color: var(--nav-2);
+  color: #5530cb;
   font: 600 1.45rem var(--serif);
 }
 
@@ -1279,7 +1279,7 @@ textarea:focus {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--nav-2), var(--accent));
+  background: linear-gradient(90deg, #8b5cf6, var(--accent));
   transition: width 0.65s ease;
 }
 
@@ -1294,7 +1294,7 @@ textarea:focus {
   margin: 8px 0 18px;
   padding: 14px;
   border-radius: 9px;
-  background: #f2f6e2;
+  background: #eef2ff;
 }
 
 .feature-toggle span b,
