@@ -11,7 +11,7 @@ const adminLinks = [
   ["↗", "Client enquiries", "/inquiries"],
   ["◌", "Moderation", "/comments"],
   ["◎", "Audience", "/subscribers"],
-  ["⌁", "Crawlers & AI", "/crawlers"],
+  ["GE", "Search & GEO", "/crawlers"],
   ["♙", "Users", "/users"],
   ["⚙", "Site settings", "/settings"],
 ];

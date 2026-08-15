@@ -577,13 +577,22 @@ r.get(
     }
     if (req.query.status === "all" && req.query.category)
       q.category = req.query.category;
+    if (req.query.author)
+      q["author.slug"] = slugify(String(req.query.author), {
+        lower: true,
+        strict: true,
+      });
     if (req.query.search) q.$text = { $search: req.query.search };
     const limit = Math.min(+req.query.limit || 12, 100),
       page = Math.max(+req.query.page || 1, 1);
     const [items, total] = await Promise.all([
       Post.find(q)
         .populate("category")
-        .sort({ publishedAt: -1, createdAt: -1 })
+        .sort(
+          req.query.status === "all"
+            ? { updatedAt: -1 }
+            : { featured: -1, publishedAt: -1, createdAt: -1 },
+        )
         .skip((page - 1) * limit)
         .limit(limit),
       Post.countDocuments(q),
@@ -597,11 +606,50 @@ r.get(
   }),
 );
 r.get(
+  "/authors",
+  wrap(async (_req, res) => {
+    const web3CategoryIds = await Category.find({
+      slug: { $in: WEB3_CATEGORY_SLUGS },
+    }).distinct("_id");
+    const authors = await Post.aggregate([
+      {
+        $match: {
+          status: "published",
+          category: { $in: web3CategoryIds },
+          "author.slug": { $nin: [null, ""] },
+        },
+      },
+      { $sort: { publishedAt: -1 } },
+      {
+        $group: {
+          _id: "$author.slug",
+          name: { $first: "$author.name" },
+          sameAs: { $first: "$author.sameAs" },
+          postCount: { $sum: 1 },
+          latestAt: { $first: "$publishedAt" },
+        },
+      },
+      { $sort: { postCount: -1, name: 1 } },
+    ]);
+    res.json(
+      authors.map((author) => ({
+        slug: author._id,
+        name: author.name,
+        sameAs: author.sameAs || [],
+        postCount: author.postCount,
+        latestAt: author.latestAt,
+      })),
+    );
+  }),
+);
+r.get(
   "/posts/id/:id",
   auth,
   admin,
   wrap(async (req, res) => {
-    const p = await Post.findById(req.params.id).populate("category");
+    const p = await Post.findById(req.params.id)
+      .populate("category")
+      .populate("createdBy updatedBy", "name email role");
     if (!p) return res.status(404).json({ error: "Post not found" });
     res.json(p);
   }),
@@ -628,7 +676,11 @@ r.post(
   auth,
   admin,
   wrap(async (req, res) => {
-    const post = await Post.create(normalizePost(req.body));
+    const post = await Post.create({
+      ...normalizePost(req.body),
+      createdBy: req.user.id,
+      updatedBy: req.user.id,
+    });
     if (post.status === "published")
       await adjustCategoryPostCount(post.category, 1);
     res.status(201).json(await post.populate("category"));
@@ -644,6 +696,7 @@ r.put(
     const previousCategory = String(post.category || "");
     const wasPublished = post.status === "published";
     post.set(normalizePost(req.body, post));
+    post.updatedBy = req.user.id;
     await post.save();
     const currentCategory = String(post.category || "");
     const isPublished = post.status === "published";
@@ -1555,6 +1608,12 @@ r.get(
       services,
       recentAI,
       recentPosts,
+      users,
+      pendingEditors,
+      submittedGuestPosts,
+      categories,
+      seoReady,
+      featuredStories,
     ] = await Promise.all([
       Post.countDocuments(),
       Post.countDocuments({ status: "published" }),
@@ -1566,6 +1625,17 @@ r.get(
         .sort({ createdAt: -1 })
         .limit(5),
       Post.find().populate("category", "name").sort({ updatedAt: -1 }).limit(6),
+      User.countDocuments(),
+      User.countDocuments({ role: "editor", editorStatus: "pending" }),
+      GuestPost.countDocuments({ status: "submitted" }),
+      Category.countDocuments(),
+      Post.countDocuments({
+        status: "published",
+        "seo.metaTitle": { $nin: [null, ""] },
+        "seo.metaDescription": { $nin: [null, ""] },
+        "featuredImage.alt": { $nin: [null, ""] },
+      }),
+      Post.countDocuments({ status: "published", featured: true }),
     ]);
     res.json({
       posts,
@@ -1577,6 +1647,12 @@ r.get(
       services,
       recentAI,
       recentPosts,
+      users,
+      pendingEditors,
+      submittedGuestPosts,
+      categories,
+      seoReady,
+      featuredStories,
     });
   }),
 );

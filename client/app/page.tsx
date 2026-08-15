@@ -9,27 +9,34 @@ const homeTitle = "Kraviona — Blockchain & Web3 News, Research and Analysis";
 const homeDescription =
   "Independent blockchain and Web3 news covering crypto markets, protocols, DeFi, regulation, security and the infrastructure shaping the open internet.";
 
-export const metadata: Metadata = {
-  title: { absolute: homeTitle },
-  description: homeDescription,
-  keywords: [
-    "blockchain news",
-    "Web3 news",
-    "crypto market analysis",
-    "DeFi",
-    "blockchain security",
-    "digital assets",
-  ],
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    url: "/",
-    title: homeTitle,
-    description: homeDescription,
-    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: homeTitle }],
-  },
-  twitter: { card: "summary_large_image", title: homeTitle, description: homeDescription, images: [DEFAULT_OG_IMAGE] },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  let settings: any = {};
+  try { settings = await api("/settings"); } catch {}
+  const title = settings.defaultSeo?.title || homeTitle;
+  const description = settings.defaultSeo?.description || homeDescription;
+  const image = settings.defaultSeo?.ogImage || DEFAULT_OG_IMAGE;
+  return {
+    title: { absolute: title },
+    description,
+    keywords: [
+      "blockchain news",
+      "Web3 news",
+      "crypto market analysis",
+      "DeFi",
+      "blockchain security",
+      "digital assets",
+    ],
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      url: "/",
+      title,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
 
 const coverage = [
   {
@@ -51,22 +58,24 @@ const coverage = [
 ];
 
 export default async function Home() {
-  let posts: any[] = [], categories: any[] = [];
+  let posts: any[] = [], categories: any[] = [], settings: any = {};
   try {
-    const [postData, categoryData] = await Promise.all([api("/posts?limit=10"), api("/categories")]);
+    const [postData, categoryData, siteSettings] = await Promise.all([api("/posts?limit=10"), api("/categories"), api("/settings")]);
     posts = postData.items || [];
     categories = categoryData || [];
+    settings = siteSettings || {};
   } catch {}
   const [featured, ...rest] = posts;
   const side = rest.slice(0, 2);
   const more = rest.slice(2);
+  const resolvedDescription = settings.defaultSeo?.description || homeDescription;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "@id": `${SITE_URL}/#home`,
     url: SITE_URL,
     name: homeTitle,
-    description: homeDescription,
+    description: resolvedDescription,
     isPartOf: { "@id": `${SITE_URL}/#website` },
     about: ["Blockchain", "Web3", "Decentralized finance", "Digital assets"],
     inLanguage: "en-IN",
@@ -88,9 +97,9 @@ export default async function Home() {
         <div className="chain-hero__grid" aria-hidden="true" />
         <div className="wrap chain-hero__inner">
           <div className="chain-hero__copy">
-            <div className="chain-live"><span /> Independent blockchain newsroom</div>
-            <h1>The signal layer for the on-chain world.</h1>
-            <p>Clear, evidence-led reporting on blockchain, crypto markets, protocols, policy and Web3 infrastructure—without the hype cycle.</p>
+            <div className="chain-live"><span /> {settings.heroEyebrow || "Independent blockchain newsroom"}</div>
+            <h1>{settings.heroTitle || "The signal layer for the on-chain world."}</h1>
+            <p>{settings.heroDescription || "Clear, evidence-led reporting on blockchain, crypto markets, protocols, policy and Web3 infrastructure—without the hype cycle."}</p>
             <div className="chain-hero__actions">
               <a className="signal-button" href="/blog">Read latest news <span>↗</span></a>
               <a className="signal-link" href="/newsletter">Get the weekly chain brief →</a>
@@ -130,7 +139,7 @@ export default async function Home() {
       )}
 
       <section className="wrap" aria-labelledby="featured-title">
-        <div className="section-heading">
+        <div className="section-heading" data-reveal="copy">
           <div><div className="eyebrow">Latest intelligence</div><h2 id="featured-title">What matters on-chain now</h2></div>
           <p>Reported developments and durable analysis for builders, investors and readers navigating decentralized technology.</p>
         </div>
@@ -149,13 +158,13 @@ export default async function Home() {
 
       <section className="coverage-section" aria-labelledby="coverage-title">
         <div className="wrap">
-          <div className="section-heading section-heading--light">
+          <div className="section-heading section-heading--light" data-reveal="copy">
             <div><div className="eyebrow">Focused coverage</div><h2 id="coverage-title">Go beyond the token price.</h2></div>
             <p>Kraviona explains the systems, incentives and risks behind the market—not just the movement on a chart.</p>
           </div>
           <div className="coverage-grid">
             {coverage.map((item, index) => (
-              <a className="coverage-card" href={item.href} key={item.title}>
+              <a className="coverage-card" href={item.href} key={item.title} data-reveal="card">
                 <div className="coverage-card__image">
                   <Image src={item.image} alt={item.alt} fill sizes="(max-width: 760px) 100vw, 50vw" />
                   <span>0{index + 1}</span>
@@ -169,7 +178,7 @@ export default async function Home() {
 
       {more.length > 0 && (
         <section className="wrap" aria-labelledby="latest-title">
-          <div className="section-heading">
+          <div className="section-heading" data-reveal="copy">
             <div><div className="eyebrow">More from the ledger</div><h2 id="latest-title">Latest Web3 stories</h2></div>
             <a className="text-link" href="/blog">View all news →</a>
           </div>
@@ -178,10 +187,10 @@ export default async function Home() {
       )}
 
       <section className="newsletter-band">
-        <div className="wrap newsletter-band__inner">
+        <div className="wrap newsletter-band__inner" data-reveal="copy">
           <div className="newsletter-band__copy">
-            <div className="eyebrow">The Chain Brief</div><h2>Web3 signal, delivered weekly.</h2>
-            <p>The consequential blockchain news, one sharp analysis and the protocol shifts worth watching—readable in five minutes.</p>
+            <div className="eyebrow">The Chain Brief</div><h2>{settings.briefingTitle || "Web3 signal, delivered weekly."}</h2>
+            <p>{settings.briefingDescription || "The consequential blockchain news, one sharp analysis and the protocol shifts worth watching—readable in five minutes."}</p>
             <div className="briefing-points"><span>Independent reporting</span><span>5-minute read</span><span>Zero token promotion</span></div>
           </div>
           <div className="newsletter-card"><span className="newsletter-card__label">Join the on-chain briefing</span><NewsletterForm compact /><p>One useful dispatch each week. Unsubscribe anytime.</p></div>

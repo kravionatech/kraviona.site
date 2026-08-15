@@ -83,7 +83,7 @@ export default function Posts() {
                 <tr key={p._id}>
                   <td>
                     <a className="story-title" href={`/posts/${p._id}`}>
-                      {p.title}
+                      {p.featured ? "★ " : ""}{p.title}
                     </a>
                     <span className="table-sub">
                       /{p.slug} · {p.wordCount || 0} words

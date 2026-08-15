@@ -13,6 +13,7 @@ const PostSchema = new Schema(
     title: { type: String, required: true },
     slug: { type: String, unique: true, required: true },
     status: { type: String, enum: ["draft", "published"], default: "draft" },
+    featured: { type: Boolean, default: false, index: true },
     content: { type: String, required: true },
     quickAnswer: String,
     keyTakeaways: [String],
@@ -28,11 +29,14 @@ const PostSchema = new Schema(
       enum: ["manual", "ai-manual", "ai-auto"],
       default: "manual",
     },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
     publishedAt: Date,
   },
   { timestamps: true },
 );
 PostSchema.index({ title: "text", content: "text", tags: "text" });
+PostSchema.index({ status: 1, featured: -1, publishedAt: -1 });
 PostSchema.pre("validate", function () {
   this.wordCount = (this.content || "")
     .replace(/<[^>]+>/g, " ")

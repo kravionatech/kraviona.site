@@ -7,6 +7,7 @@ const empty = {
   title: "",
   slug: "",
   status: "draft",
+  featured: false,
   category: "",
   quickAnswer: "",
   content: "",
@@ -476,6 +477,17 @@ export default function PostEditor({ id }: { id?: string }) {
                 <option value="published">Published</option>
               </select>
             </label>
+            <label className="check-row feature-toggle">
+              <input
+                type="checkbox"
+                checked={Boolean(post.featured)}
+                onChange={(e) => field("featured", e.target.checked)}
+              />
+              <span>
+                <b>Feature this story</b>
+                <small>Pin it to the lead position on the public newsroom.</small>
+              </span>
+            </label>
             <div className="publish-summary">
               <span>Content</span>
               <b>{words >= 800 ? "Ready" : "Needs depth"}</b>
@@ -494,6 +506,8 @@ export default function PostEditor({ id }: { id?: string }) {
               <b>
                 {post.faqs.filter((f: any) => f.question && f.answer).length}
               </b>
+              <span>GEO summary</span>
+              <b>{post.quickAnswer?.length >= 50 ? "Ready" : "Review"}</b>
             </div>
             <button
               className="full-btn"

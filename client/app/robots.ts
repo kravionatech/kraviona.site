@@ -39,7 +39,9 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       },
     ],
     sitemap:
-      crawler.sitemapEnabled === false ? undefined : `${SITE_URL}/sitemap.xml`,
+      crawler.sitemapEnabled === false
+        ? undefined
+        : [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/news-sitemap.xml`],
     host: SITE_URL,
   };
 }

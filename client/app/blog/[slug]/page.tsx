@@ -38,7 +38,8 @@ export async function generateMetadata({
       description,
       alternates: { canonical },
       keywords: p.tags,
-      authors: [{ name: authorName, url: SITE_URL }],
+      authors: [{ name: authorName, url: `${SITE_URL}/author/${p.author?.slug || "kraviona-editorial-team"}` }],
+      classification: p.category?.name || "Blockchain and Web3",
       openGraph: {
         type: "article",
         url: canonical,
@@ -122,7 +123,7 @@ export default async function PostPage({
   const author = {
     "@type": authorIsTeam ? "Organization" : "Person",
     name: authorName,
-    url: SITE_URL,
+    url: `${SITE_URL}/author/${p.author?.slug || "kraviona-editorial-team"}`,
     ...(p.author?.sameAs?.length ? { sameAs: p.author.sameAs } : {}),
   };
   const ld = {
@@ -151,6 +152,14 @@ export default async function PostPage({
         author,
         publisher: { "@id": `${SITE_URL}/#organization` },
         isPartOf: { "@id": `${SITE_URL}/#website` },
+        isAccessibleForFree: true,
+        about: [p.category?.name, ...(p.tags || [])]
+          .filter(Boolean)
+          .map((name: string) => ({ "@type": "Thing", name })),
+        speakable: {
+          "@type": "SpeakableSpecification",
+          cssSelector: [".article-header h1", ".article-deck", ".quick-answer"],
+        },
       },
       {
         "@type": "BreadcrumbList",
@@ -221,7 +230,7 @@ export default async function PostPage({
           <p className="article-deck">{p.quickAnswer}</p>
           <div className="byline">
             <span>
-              By <strong>{p.author?.name || "Kraviona Editorial Team"}</strong>
+              By <strong><a href={`/author/${p.author?.slug || "kraviona-editorial-team"}`}>{p.author?.name || "Kraviona Editorial Team"}</a></strong>
             </span>
             <span>
               Published{" "}

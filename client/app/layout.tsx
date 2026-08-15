@@ -5,6 +5,7 @@ import Script from "next/script";
 import { api } from "../lib/api";
 import { absoluteUrl, DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "../lib/site";
 import ClientNavigation from "../components/ClientNavigation";
+import MotionEnhancer from "../components/MotionEnhancer";
 
 const baseMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -41,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#07110f", colorScheme: "dark light" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#034a00", colorScheme: "dark light" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let categories: any[] = [], settings: any = {};
@@ -84,6 +85,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-RW2R0MNJK5" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-RW2R0MNJK5');`}</Script>
         <ClientNavigation />
+        <MotionEnhancer />
         <a className="skip-link" href="#main-content">Skip to content</a>
         <header className="site-header">
           <div className="utility-bar"><div className="wrap"><span><b>●</b> Blockchain intelligence without the hype</span><span className="utility-edition">Web3 · India / Global</span></div></div>

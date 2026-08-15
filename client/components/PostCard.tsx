@@ -16,7 +16,10 @@ export default function PostCard({
       .split(/\s+/)
       .filter(Boolean).length;
   return (
-    <article className={`story-card${featured ? " story-card--featured" : ""}`}>
+    <article
+      className={`story-card${featured ? " story-card--featured" : ""}`}
+      data-reveal="card"
+    >
       <a className="story-card__image" href={`/blog/${post.slug}`}>
         {post.featuredImage?.url ? (
           <Image

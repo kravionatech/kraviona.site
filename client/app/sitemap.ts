@@ -31,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let settings: any = {};
   let posts: any[] = [];
   let categories: any[] = [];
+  let authors: any[] = [];
 
   try {
     settings = await api("/settings");
@@ -39,9 +40,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       5000,
       Math.max(1, crawler.sitemapMaxPosts || 500),
     );
-    [posts, categories] = await Promise.all([
+    [posts, categories, authors] = await Promise.all([
       crawler.sitemapIncludePosts === false ? [] : getAllPosts(maxPosts),
       crawler.sitemapIncludeCategories === false ? [] : api("/categories"),
+      api("/authors").catch(() => []),
     ]);
   } catch (error) {
     console.error("Sitemap data error:", error);
@@ -70,6 +72,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  if (crawler.sitemapIncludeServices !== false) {
+    urls.push({
+      url: `${SITE_URL}/services`,
+      lastModified: settingsDate,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    });
+  }
+
   if (crawler.sitemapIncludeNewsletter !== false) {
     urls.push({
       url: `${SITE_URL}/newsletter`,
@@ -95,6 +106,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: validDate(category.updatedAt),
         changeFrequency: "weekly" as const,
         priority: 0.7,
+      })),
+    ...authors
+      .filter((author) => author.slug)
+      .map((author) => ({
+        url: `${SITE_URL}/author/${author.slug}`,
+        lastModified: validDate(author.latestAt),
+        changeFrequency: "weekly" as const,
+        priority: 0.65,
       })),
   );
 
