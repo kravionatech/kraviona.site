@@ -14,6 +14,17 @@
 * {
   box-sizing: border-box;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 body {
   margin: 0;
   background: var(--bg);
@@ -1331,5 +1342,141 @@ textarea:focus {
   .readiness-card > i span {
     transition: none;
     transform: none !important;
+  }
+}
+
+/* Fast studio navigation and skeleton feedback */
+.admin-route-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.admin-route-loader.is-active {
+  visibility: visible;
+}
+
+.admin-route-loader > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, #8b5cf6, var(--accent));
+  box-shadow: 0 0 16px rgba(0, 200, 240, 0.6);
+}
+
+.admin-route-loader.is-active > span {
+  animation: admin-route-progress 7s cubic-bezier(0.12, 0.72, 0.2, 1) forwards;
+}
+
+.admin-route-loader small {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(5, 8, 22, 0.92);
+  color: #d7e0f3;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-loading {
+  padding-top: 8px;
+}
+
+.admin-loading__head {
+  display: grid;
+  gap: 13px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-loading__head span {
+  width: 120px;
+  height: 11px;
+}
+
+.admin-loading__head b {
+  width: min(450px, 70%);
+  height: 52px;
+}
+
+.admin-loading__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.admin-loading__metrics i {
+  min-height: 128px;
+}
+
+.admin-loading__panels {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 20px;
+  margin-top: 22px;
+}
+
+.admin-loading__panels span {
+  min-height: 330px;
+}
+
+.admin-skeleton {
+  display: block;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #e3e8f5;
+}
+
+.admin-skeleton::after {
+  content: "";
+  display: block;
+  width: 45%;
+  height: 100%;
+  transform: translateX(-120%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.8), transparent);
+  animation: admin-skeleton-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes admin-route-progress {
+  0% { transform: scaleX(0.05); }
+  18% { transform: scaleX(0.4); }
+  58% { transform: scaleX(0.74); }
+  100% { transform: scaleX(0.94); }
+}
+
+@keyframes admin-skeleton-sweep {
+  to { transform: translateX(280%); }
+}
+
+@media (max-width: 760px) {
+  .admin-loading__metrics,
+  .admin-loading__panels {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-loading__panels span {
+    min-height: 230px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-route-loader > span,
+  .admin-skeleton::after {
+    animation: none !important;
+  }
+
+  .admin-route-loader.is-active > span {
+    transform: scaleX(0.7);
   }
 }

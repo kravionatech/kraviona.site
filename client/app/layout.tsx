@@ -2,6 +2,7 @@ import "./globals.css";
 import "./compat.css";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Suspense } from "react";
 import { api } from "../lib/api";
 import { absoluteUrl, DEFAULT_OG_IMAGE, jsonLd, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "../lib/site";
 import ClientNavigation from "../components/ClientNavigation";
@@ -84,25 +85,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-RW2R0MNJK5" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-RW2R0MNJK5');`}</Script>
-        <ClientNavigation />
+        <Suspense fallback={null}><ClientNavigation /></Suspense>
         <MotionEnhancer />
         <a className="skip-link" href="#main-content">Skip to content</a>
         <header className="site-header">
-          <div className="utility-bar"><div className="wrap"><span><b>●</b> Blockchain intelligence without the hype</span><span className="utility-edition">Web3 · India / Global</span></div></div>
-          <div className="wrap nav">
+          <div className="utility-bar"><div className="wrap"><span><b>●</b> Live blockchain intelligence</span><span className="utility-edition">Markets · Protocols · Security · Policy</span></div></div>
+          <div className="wrap nav news-masthead">
+            <div className="news-desk-meta"><span>Independent newsroom</span><b>India / Global</b></div>
             <a className="brand" href="/" aria-label={`${brand} home`}>{brand.toLowerCase()}<span>.</span></a>
-            <nav aria-label="Primary navigation">
-              <a href="/blog">Latest news</a>
-              {categories.slice(0, 3).map((category) => <a href={`/category/${category.slug}`} key={category._id}>{category.name}</a>)}
-              <a href="/newsletter">Chain Brief</a>
-            </nav>
-            <a className="header-cta" href="/newsletter">Get the brief <span>→</span></a>
+            <div className="news-masthead__actions"><a className="header-search" href="/blog#journal-search">Search</a><a className="header-cta" href="/newsletter">Get the brief <span>→</span></a></div>
           </div>
-          <nav className="mobile-topics wrap" aria-label="Topics">
-            <a href="/blog">Latest news</a>
+          <div className="news-primary-wrap">
+          <nav className="news-primary-nav wrap" aria-label="Primary navigation">
+            <a href="/">Home</a>
+            <a href="/blog"><b>Live</b> Latest</a>
             {categories.map((category) => <a href={`/category/${category.slug}`} key={category._id}>{category.name}</a>)}
             <a href="/newsletter">Chain Brief</a>
           </nav>
+          </div>
         </header>
         <main id="main-content">{children}</main>
         <footer className="site-footer">
