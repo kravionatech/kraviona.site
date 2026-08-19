@@ -1,191 +1,195 @@
 #!/usr/bin/env node
-import { randomUUID } from "node:crypto";
+
+import path from "node:path";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
+import { requireBearerAuth } from "@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js";
 import {
   getOAuthProtectedResourceMetadataUrl,
   mcpAuthRouter,
 } from "@modelcontextprotocol/sdk/server/auth/router.js";
-import { requireBearerAuth } from "@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { assertHttpConfiguration, config } from "./config.js";
+import { disconnectOAuthDatabase } from "./db.js";
 import { createMcpServer } from "./index.js";
-import { KravionaOAuthProvider } from "./oauth.js";
+import { oauthProvider, oauthScopes } from "./oauth.js";
 
-const host = "0.0.0.0";
-const port = Number(process.env.PORT || 4100);
-const bearerToken = process.env.MCP_BEARER_TOKEN?.trim();
-const inferredPublicUrl =
-  process.env.MCP_PUBLIC_URL ||
-  (process.env.RAILWAY_PUBLIC_DOMAIN &&
-    `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`) ||
-  process.env.RENDER_EXTERNAL_URL ||
-  (process.env.RENDER_EXTERNAL_HOSTNAME
-    ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
-    : undefined) ||
-  `http://127.0.0.1:${port}`;
-const publicUrl = new URL(inferredPublicUrl);
-const resourceUrl = new URL("/mcp", publicUrl);
-
-if (!bearerToken || bearerToken.length < 24) {
-  console.error(
-    "MCP_BEARER_TOKEN is required and must contain at least 24 characters.",
-  );
-  process.exit(1);
-}
-
-const app = createMcpExpressApp({ host });
-app.set("trust proxy", 1);
-
-// MCP & CORS headers middleware for all responses
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Authorization, Content-Type, mcp-session-id",
-  );
-  res.setHeader("Access-Control-Max-Age", "86400");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-  next();
-});
-
-const sessions = new Map();
-const oauthProvider = new KravionaOAuthProvider({
-  accessKey: bearerToken,
-  resourceUrl,
-});
-const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(resourceUrl);
-const requireMcpAuth = requireBearerAuth({
-  verifier: oauthProvider,
-  requiredScopes: ["mcp:tools"],
-  resourceMetadataUrl,
-});
-
-app.get("/.well-known/oauth-protected-resource", (_req, res) =>
-  res.json({
-    resource: resourceUrl.href,
-    authorization_servers: [publicUrl.href],
-    scopes_supported: ["mcp:tools"],
-    bearer_methods_supported: ["header"],
-    resource_name: "Kraviona CMS",
-  }),
-);
-
-app.post(
-  "/oauth/approve",
-  express.urlencoded({ extended: false }),
-  (req, res) => {
-    oauthProvider.approve(req.body.request_id, req.body.access_key, res);
-  },
-);
-
-app.use(
-  mcpAuthRouter({
-    provider: oauthProvider,
-    issuerUrl: publicUrl,
-    baseUrl: publicUrl,
-    resourceServerUrl: resourceUrl,
-    scopesSupported: ["mcp:tools"],
-    resourceName: "Kraviona CMS",
-  }),
-);
-
-app.get("/", (_req, res) => {
-  res.json({
-    name: "Kraviona MCP Server",
-    status: "online",
-    endpoint: "/mcp",
-    oauth: true,
+const jsonRpcError = (response, status, message) => {
+  response.status(status).json({
+    jsonrpc: "2.0",
+    error: {
+      code: status === 401 ? -32001 : -32603,
+      message,
+    },
+    id: null,
   });
-});
+};
 
-app.get("/health", (_req, res) => {
-  res
-    .status(200)
-    .json({
+const oauthBearerMiddleware = () =>
+  requireBearerAuth({
+    verifier: oauthProvider,
+    requiredScopes: [...oauthScopes],
+    resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(
+      new URL(config.oauth.resourceUrl),
+    ),
+  });
+
+export const createHttpApp = () => {
+  assertHttpConfiguration();
+
+  const allowedHosts = [
+    ...new Set(
+      [
+        new URL(config.oauth.publicUrl).hostname,
+        process.env.VERCEL_URL,
+        process.env.VERCEL_BRANCH_URL,
+        process.env.VERCEL_PROJECT_PRODUCTION_URL,
+        "127.0.0.1",
+        "localhost",
+        "[::1]",
+      ].filter(Boolean),
+    ),
+  ];
+  const app = createMcpExpressApp({ host: "0.0.0.0", allowedHosts });
+  app.set("trust proxy", process.env.VERCEL ? 2 : 1);
+
+  app.post(
+    "/oauth/approve",
+    express.urlencoded({ extended: false, limit: "16kb" }),
+    async (request, response, next) => {
+      try {
+        await oauthProvider.approve(
+          request.body.request_id,
+          request.body.access_key,
+          response,
+        );
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+
+  const publicUrl = new URL(config.oauth.publicUrl);
+  const rateLimitOptions = { validate: false };
+  app.use(
+    mcpAuthRouter({
+      provider: oauthProvider,
+      issuerUrl: publicUrl,
+      baseUrl: publicUrl,
+      resourceServerUrl: new URL(config.oauth.resourceUrl),
+      scopesSupported: [...oauthScopes],
+      resourceName: "Kraviona.site CMS",
+      authorizationOptions: { rateLimit: rateLimitOptions },
+      tokenOptions: { rateLimit: rateLimitOptions },
+      clientRegistrationOptions: { rateLimit: rateLimitOptions },
+      revocationOptions: { rateLimit: rateLimitOptions },
+    }),
+  );
+
+  app.get("/", (_request, response) => {
+    response.json({
+      status: "ok",
+      service: config.name,
+      version: config.version,
+      transport: "streamable-http",
+      endpoint: "/mcp",
+      authentication: "oauth-2.1",
+      multiClient: true,
+    });
+  });
+
+  app.get("/health", (_request, response) => {
+    response.status(200).json({
       status: "ok",
       ok: true,
-      service: "kraviona-mcp",
+      service: config.name,
       transport: "streamable-http",
     });
-});
+  });
 
-app.post("/mcp", requireMcpAuth, async (req, res) => {
-  const sessionId = req.get("mcp-session-id");
+  app.use("/mcp", oauthBearerMiddleware());
 
-  try {
-    let session = sessionId ? sessions.get(sessionId) : undefined;
+  // Stateless Streamable HTTP lets requests land on different server instances.
+  // OAuth state remains shared through MongoDB, so multiple Claude connectors
+  // can use the same deployment without process-local session affinity.
+  app.post("/mcp", async (request, response) => {
+    const server = createMcpServer();
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+      enableJsonResponse: true,
+    });
 
-    if (!session && !sessionId && isInitializeRequest(req.body)) {
-      const server = createMcpServer();
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        enableJsonResponse: true,
-        onsessioninitialized: (id) => sessions.set(id, { server, transport }),
-      });
+    let cleanedUp = false;
+    const cleanup = async () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
+      await Promise.allSettled([transport.close(), server.close()]);
+    };
 
-      transport.onclose = () => {
-        if (transport.sessionId) sessions.delete(transport.sessionId);
-      };
+    response.once("close", () => void cleanup());
 
+    try {
       await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
-      return;
+      await transport.handleRequest(request, response, request.body);
+    } catch (error) {
+      console.error(`[MCP] HTTP request failed: ${error.message}`);
+      if (!response.headersSent) {
+        jsonRpcError(response, 500, "Internal server error");
+      }
+    } finally {
+      if (response.writableEnded) await cleanup();
     }
+  });
 
-    if (!session) {
-      return res.status(400).json({
-        jsonrpc: "2.0",
-        error: { code: -32000, message: "Invalid or missing MCP session ID" },
-        id: null,
+  app.all("/mcp", (_request, response) => {
+    response.setHeader("Allow", "POST");
+    jsonRpcError(response, 405, "Method not allowed");
+  });
+
+  app.use((error, _request, response, _next) => {
+    console.error(`[MCP] HTTP error: ${error.message}`);
+    if (!response.headersSent) {
+      response.status(500).json({
+        status: "error",
+        code: "MCP_HTTP_ERROR",
+        message: "Internal server error",
       });
     }
+  });
 
-    await session.transport.handleRequest(req, res, req.body);
+  return app;
+};
+
+export const startHttpServer = () => {
+  const app = createHttpApp();
+  const listener = app.listen(config.port, "0.0.0.0", () => {
+    console.error(
+      `[MCP] ${config.name} ${config.version} listening on port ${config.port}`,
+    );
+  });
+
+  const shutdown = async () => {
+    await new Promise((resolve) => listener.close(resolve));
+    await disconnectOAuthDatabase();
+    process.exit(0);
+  };
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
+  return listener;
+};
+
+const isDirectExecution =
+  process.argv[1] &&
+  realpathSync(path.resolve(process.argv[1])) ===
+    realpathSync(fileURLToPath(import.meta.url));
+
+if (isDirectExecution) {
+  try {
+    startHttpServer();
   } catch (error) {
-    console.error("MCP POST failed:", error);
-    if (!res.headersSent) {
-      res.status(500).json({
-        jsonrpc: "2.0",
-        error: { code: -32603, message: "Internal server error" },
-        id: null,
-      });
-    }
+    console.error(`[MCP] Fatal startup error: ${error.message}`);
+    process.exit(1);
   }
-});
-
-async function handleSessionRequest(req, res) {
-  const session = sessions.get(req.get("mcp-session-id"));
-  if (!session)
-    return res.status(400).send("Invalid or missing MCP session ID");
-  await session.transport.handleRequest(req, res);
 }
-
-app.get("/mcp", requireMcpAuth, (_req, res) => {
-  res.status(405).set("Allow", "POST, DELETE").send("Method Not Allowed");
-});
-app.delete("/mcp", requireMcpAuth, handleSessionRequest);
-
-const listener = app.listen(port, host, (error) => {
-  if (error) throw error;
-  console.log(
-    `Kraviona MCP listening on ${host}:${port} (${resourceUrl.href})`,
-  );
-});
-listener.keepAliveTimeout = 65000;
-listener.headersTimeout = 66000;
-
-async function shutdown() {
-  listener.close();
-  await Promise.allSettled(
-    [...sessions.values()].map(({ transport }) => transport.close()),
-  );
-  process.exit(0);
-}
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);

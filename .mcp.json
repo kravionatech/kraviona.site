@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "kraviona-site": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${CLAUDE_PROJECT_DIR:-.}/mcp-server/src/index.js"
+      ]
+    }
+  }
+}

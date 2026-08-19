@@ -14,6 +14,7 @@ const child = spawn(process.execPath, ["src/http.js"], {
     PORT: String(port),
     MCP_BEARER_TOKEN: token,
     MCP_PUBLIC_URL: `http://127.0.0.1:${port}`,
+    MCP_OAUTH_STORE: "memory",
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -139,6 +140,74 @@ try {
     );
   }
 
+  // A second independently registered Claude client must coexist with the
+  // first one. This guards against single-client stores and token replacement.
+  const secondRegistration = await fetch(metadata.registration_endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      redirect_uris: ["https://claude.com/api/mcp/auth_callback"],
+      token_endpoint_auth_method: "none",
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      client_name: "Claude second connection",
+    }),
+  }).then((response) => response.json());
+  if (!secondRegistration.client_id) {
+    throw new Error("Second Claude dynamic registration failed");
+  }
+
+  const secondVerifier =
+    "oauth-second-client-verifier-that-is-long-enough-987654321";
+  const secondChallenge = createHash("sha256")
+    .update(secondVerifier)
+    .digest("base64url");
+  const secondAuthorizeUrl = new URL(metadata.authorization_endpoint);
+  secondAuthorizeUrl.search = new URLSearchParams({
+    response_type: "code",
+    client_id: secondRegistration.client_id,
+    redirect_uri: "https://claude.com/api/mcp/auth_callback",
+    code_challenge: secondChallenge,
+    code_challenge_method: "S256",
+    scope: "mcp:tools",
+    resource,
+    state: "second-smoke-state",
+  });
+  const secondConsent = await fetch(secondAuthorizeUrl, { redirect: "manual" });
+  const secondConsentHtml = await secondConsent.text();
+  const secondRequestId = secondConsentHtml.match(
+    /name="request_id" value="([^"]+)"/,
+  )?.[1];
+  if (secondConsent.status !== 200 || !secondRequestId) {
+    throw new Error("Second Claude consent page was not rendered");
+  }
+
+  const secondApproval = await fetch(`${issuer}/oauth/approve`, {
+    method: "POST",
+    redirect: "manual",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      request_id: secondRequestId,
+      access_key: token,
+    }),
+  });
+  const secondCallback = new URL(secondApproval.headers.get("location"));
+  const secondTokenResponse = await fetch(metadata.token_endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: secondRegistration.client_id,
+      code: secondCallback.searchParams.get("code"),
+      code_verifier: secondVerifier,
+      redirect_uri: "https://claude.com/api/mcp/auth_callback",
+      resource,
+    }),
+  }).then((response) => response.json());
+  if (!secondTokenResponse.access_token) {
+    throw new Error("Second Claude token exchange failed");
+  }
+
   const transport = new StreamableHTTPClientTransport(
     new URL(`http://127.0.0.1:${port}/mcp`),
     {
@@ -179,23 +248,29 @@ try {
 
   await client.close();
 
-  const oauthTransport = new StreamableHTTPClientTransport(new URL(resource), {
-    requestInit: {
-      headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-    },
-  });
-  const oauthClient = new Client({
-    name: "kraviona-oauth-smoke-test",
-    version: "1.0.0",
-  });
-  await oauthClient.connect(oauthTransport);
-  const oauthTools = await oauthClient.listTools();
-  await oauthClient.close();
-  if (oauthTools.tools.length !== tools.tools.length)
-    throw new Error("OAuth access token could not access all tools");
+  for (const [index, accessToken] of [
+    tokenResponse.access_token,
+    secondTokenResponse.access_token,
+  ].entries()) {
+    const oauthTransport = new StreamableHTTPClientTransport(new URL(resource), {
+      requestInit: {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    });
+    const oauthClient = new Client({
+      name: `kraviona-oauth-smoke-test-${index + 1}`,
+      version: "1.0.0",
+    });
+    await oauthClient.connect(oauthTransport);
+    const oauthTools = await oauthClient.listTools();
+    await oauthClient.close();
+    if (oauthTools.tools.length !== tools.tools.length) {
+      throw new Error(`OAuth client ${index + 1} could not access all tools`);
+    }
+  }
 
   console.log(
-    `HTTP MCP smoke test passed: Claude DCR + PKCE OAuth, static bearer auth, ${tools.tools.length} tools, and backend health reporting confirmed.`,
+    `HTTP MCP smoke test passed: two simultaneous Claude DCR + PKCE clients, static bearer auth, ${tools.tools.length} tools, and backend health reporting confirmed.`,
   );
 } finally {
   child.kill("SIGTERM");

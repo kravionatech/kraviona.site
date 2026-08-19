@@ -1,3 +1,5 @@
+import "./config.js";
+
 const DEFAULT_API_ORIGIN = "http://localhost:4000";
 const REQUEST_TIMEOUT_MS = 30_000;
 

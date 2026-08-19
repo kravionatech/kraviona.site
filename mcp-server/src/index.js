@@ -5,13 +5,14 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { api } from "./api.js";
+import { config } from "./config.js";
 import { registerEditorialTools } from "./tools/editorial.js";
 import { registerPlatformTools } from "./tools/platform.js";
 import { registerPostTools } from "./tools/posts.js";
 import { registerTool } from "./toolkit.js";
 
-export const MCP_SERVER_NAME = "kraviona-cms";
-export const MCP_SERVER_VERSION = "2.0.0";
+export const MCP_SERVER_NAME = config.name;
+export const MCP_SERVER_VERSION = config.version;
 
 /**
  * Build a fresh MCP server for one stdio process or HTTP session.

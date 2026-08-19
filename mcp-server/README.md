@@ -1,32 +1,30 @@
-# Kraviona MCP Server
+# Kraviona.site MCP Server
 
-Kraviona MCP exposes the editorial platform as 38 structured tools. An MCP client can manage posts, contributors, moderation, subscribers, services, enquiries, settings and content automation through the existing backend API.
+Private MCP access to the Kraviona.site editorial platform. The server exposes
+38 structured CMS tools over local stdio and OAuth-protected Streamable HTTP.
 
-## Architecture
+## Multi-Claude architecture
 
 ```text
-MCP client
-   │  stdio or OAuth-protected Streamable HTTP
-   ▼
-mcp-server/src/index.js
-   │  validates tool input with Zod
-   ▼
-mcp-server/src/api.js
-   │  signs in as an administrator and keeps cookies in memory
-   ▼
-Kraviona Express API → MongoDB / Cloudinary / Resend / AI provider
+Claude Code instances ── stdio ─────────────┐
+                                            ├── Kraviona.site MCP ── CMS API
+Claude Chat connectors ─ OAuth 2.1 + HTTP ──┘           │
+                                                        └── MongoDB OAuth store
 ```
 
-Tool code is grouped by responsibility:
+- Every local Claude Code process gets an isolated stdio server.
+- Remote Claude clients dynamically register and use authorization-code PKCE.
+- OAuth clients, pending requests, authorization codes and hashed tokens are
+  stored in MongoDB instead of process memory.
+- Access and refresh tokens survive restarts and work across multiple Vercel or
+  Node instances.
+- HTTP MCP requests are stateless, so no sticky session is required.
+- Refresh tokens rotate on use. Authorization codes are single-use.
+- Only the official configured Claude callback URLs are accepted.
+- The CMS administrator password remains server-side and is never sent to a
+  Claude client.
 
-- `src/tools/posts.js` — first-party editorial posts.
-- `src/tools/editorial.js` — guest posts, comments, subscribers and users.
-- `src/tools/platform.js` — dashboard, categories, services, enquiries, settings and AI automation.
-- `src/schemas.js` — shared Zod input contracts.
-- `src/toolkit.js` — consistent MCP responses, errors and query building.
-- `src/api.js` — authenticated backend API client.
-
-## Tool catalogue
+## Tools
 
 | Domain      | Tools                                                                                    |
 | ----------- | ---------------------------------------------------------------------------------------- |
@@ -42,11 +40,18 @@ Tool code is grouped by responsibility:
 | Settings    | `get_site_settings`, `update_site_settings`, `update_crawler_settings`                   |
 | Automation  | `generate_ai_draft`, `list_keyword_queue`, `add_keyword`, `delete_keyword`               |
 
-Permanent-delete tools require `confirm: true`. Read tools advertise `readOnlyHint`; destructive tools advertise `destructiveHint`.
+Permanent-delete tools require `confirm: true`. Read tools advertise
+`readOnlyHint`; destructive tools advertise `destructiveHint`.
 
-## Local configuration
+## Local Claude Code setup
 
-Copy `.env.example` to a local ignored environment file and set:
+Install dependencies from the repository root:
+
+```powershell
+npm install
+```
+
+Copy `mcp-server/.env.example` to `mcp-server/.env` and set:
 
 ```text
 KRAVIONA_API_URL=http://localhost:4000
@@ -54,80 +59,101 @@ KRAVIONA_ADMIN_EMAIL=your-admin@example.com
 KRAVIONA_ADMIN_PASSWORD=your-admin-password
 ```
 
-Never commit real credentials. The MCP process signs in through `/api/auth/login` and stores only the returned session cookies in process memory.
+The committed project-level `.mcp.json` starts
+`mcp-server/src/index.js`. Open the `kraviona.site` repository as the Claude
+project and restart Claude Code after creating the environment file. Multiple
+Claude Code windows can connect simultaneously because each starts its own
+stdio process.
 
-Example MCP host configuration:
+Equivalent manual client configuration:
 
 ```json
 {
   "mcpServers": {
-    "kraviona": {
+    "kraviona-site": {
       "command": "node",
-      "args": ["C:/absolute/path/kraviona.site/mcp-server/src/index.js"],
-      "env": {
-        "KRAVIONA_API_URL": "http://localhost:4000",
-        "KRAVIONA_ADMIN_EMAIL": "your-admin@example.com",
-        "KRAVIONA_ADMIN_PASSWORD": "your-password"
-      }
+      "args": ["C:/absolute/path/kraviona.site/mcp-server/src/index.js"]
     }
   }
 }
 ```
 
-## Commands
+## Remote Claude connector deployment
 
-```bash
-npm run build -w mcp-server
-npm test -w mcp-server
-npm run test:integration -w mcp-server
-npm run test:http -w mcp-server
-npm run start:stdio -w mcp-server
-npm run start:http -w mcp-server
-```
+Create a dedicated Vercel project with `mcp-server` as the Root Directory:
 
-The contract and HTTP transport tests work without a running backend. `cms_health` reports the backend as `online`, `unhealthy`, or `offline` without taking down the MCP session. The integration test requires the backend and valid administrator credentials.
+- Framework preset: Other
+- Install command: `npm install`
+- Build command: `npm run build`
+- Output directory: leave empty
+- Node.js: 22 or newer
 
-## Remote deployment
-
-Create a separate Node web service with `mcp-server` as its root directory:
-
-```text
-Build command: npm install
-Start command: npm run start:http
-Health path: /health
-Node version: 22
-```
-
-Required production environment:
+Set these production variables:
 
 ```text
 KRAVIONA_API_URL=https://api.kraviona.site
 KRAVIONA_ADMIN_EMAIL=<production administrator email>
 KRAVIONA_ADMIN_PASSWORD=<production administrator password>
-MCP_BEARER_TOKEN=<at least 24 random characters>
-MCP_PUBLIC_URL=https://YOUR-MCP-HOST.example.com
+MONGO_URI=<production MongoDB URI>
+DB_NAME=kraviona-site
+MCP_BEARER_TOKEN=<random secret with at least 24 characters>
+MCP_PUBLIC_URL=https://mcp.kraviona.site
+MCP_TRANSPORT=streamable-http
+MCP_OAUTH_REDIRECT_URIS=https://claude.ai/api/mcp/auth_callback,https://claude.com/api/mcp/auth_callback
+MCP_OAUTH_ACCESS_TOKEN_SECONDS=3600
+MCP_OAUTH_REFRESH_TOKEN_DAYS=30
+MCP_DB_TIMEOUT_MS=20000
 ```
 
-Generate a standalone bearer secret; never reuse the administrator password. The MCP endpoint is `/mcp` and supports static bearer authentication plus OAuth Dynamic Client Registration and PKCE for the official Claude callback URLs.
+`MCP_BEARER_TOKEN` is the access key entered on the authorization screen. Use a
+standalone random secret; never reuse the CMS administrator password.
 
-Remote client example:
+After deployment, verify:
 
-```toml
-[mcp_servers.kraviona_remote]
-url = "https://YOUR-MCP-HOST.example.com/mcp"
-bearer_token_env_var = "KRAVIONA_MCP_TOKEN"
-startup_timeout_sec = 30
-tool_timeout_sec = 60
+```text
+https://mcp.kraviona.site/
+https://mcp.kraviona.site/health
+https://mcp.kraviona.site/.well-known/oauth-authorization-server
+https://mcp.kraviona.site/.well-known/oauth-protected-resource/mcp
 ```
 
-## Safe operating rules
+In every Claude account or workspace:
 
-1. Read a record before making a substantial update.
+1. Open **Customize > Connectors**.
+2. Choose **Add custom connector**.
+3. Enter `https://mcp.kraviona.site/mcp`.
+4. Complete the authorization screen with `MCP_BEARER_TOKEN`.
+
+Each Claude connection receives its own client registration and rotating token
+pair. Adding another Claude does not invalidate existing connectors.
+
+The same server can run on Render or Railway with `npm run start:http`; keep a
+single stable `MCP_PUBLIC_URL` and the same MongoDB across all instances.
+
+## Commands
+
+```powershell
+npm run build -w mcp-server             # Syntax verification
+npm test -w mcp-server                  # 38-tool contract test
+npm run test:http -w mcp-server         # DCR + PKCE + HTTP smoke test
+npm run test:integration -w mcp-server  # Live authenticated CMS API reads
+npm run test:remote -w mcp-server       # Deployed endpoint smoke test
+npm run start:stdio -w mcp-server       # Local MCP
+npm run start:http -w mcp-server        # Remote-style local server
+```
+
+The HTTP smoke test explicitly uses the in-memory OAuth store and is safe for
+local CI. Production rejects `MCP_OAUTH_STORE=memory`; MongoDB persistence is
+required there.
+
+## Safety
+
+1. Read a record before a substantial update.
 2. Create AI-generated articles as drafts.
-3. Verify facts, sources, rights and external links before publishing.
-4. Use status changes instead of deletion whenever records may be needed later.
-5. Never pass production secrets inside post content, notes or tool descriptions.
-6. Review `review_guest_post` output and confirm that the public post exists after publication.
-7. Run contract and integration tests before deploying MCP changes.
+3. Verify facts, sources, media rights and links before publishing.
+4. Prefer status changes over permanent deletion.
+5. Never place production secrets in content or tool arguments.
+6. Run contract and HTTP tests before deployment.
 
-The complete project SOP is available at [`../docs/kraviona-project-sop.html`](../docs/kraviona-project-sop.html).
+The complete project SOP is at
+[`../docs/kraviona-project-sop.html`](../docs/kraviona-project-sop.html).
